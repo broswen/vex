@@ -1,5 +1,5 @@
 
-.PHONY: compose build publish
+.PHONY: compose build publish helm-template
 
 compose:
 	docker-compose up --build
@@ -11,3 +11,7 @@ build:
 publish: build
 	docker push broswen/vex:latest
 	docker push broswen/vex-provisioner:latest
+
+helm-template:
+	helm template config k8s/config > k8s/config.yaml
+	helm template provisioner k8s/provisioner > k8s/provisioner.yaml

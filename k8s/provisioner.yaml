@@ -1,0 +1,91 @@
+---
+# Source: provisioner/templates/secret.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: provisioner
+  namespace: vex
+  labels:
+    helm.sh/chart: provisioner-0.1.0
+    app.kubernetes.io/name: provisioner
+    app.kubernetes.io/instance: provisioner
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/managed-by: Helm
+data:
+  CLOUDFLARE_ACCOUNT_ID: <account id>
+  CLOUDFLARE_API_TOKEN: <api token>
+  DSN: cG9zdGdyZXM6Ly9wb3N0Z3JlczpwYXNzd29yZEBwb3N0Z3Jlcy5wb3N0Z3Jlcy5zdmMuY2x1c3Rlci5sb2NhbDo1NDMyL3ZleA==
+  KV_NAMESPACE_ID: <kv namespace id>
+---
+# Source: provisioner/templates/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: provisioner
+  namespace: vex
+  labels:
+    helm.sh/chart: provisioner-0.1.0
+    app.kubernetes.io/name: provisioner
+    app.kubernetes.io/instance: provisioner
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/managed-by: Helm
+data:
+  BROKERS: kafka-clusterip.kafka.svc.cluster.local:9092
+  DEPROVISION_TOPIC: vex-deprovision
+  METRICS_PATH: /metrics
+  METRICS_PORT: "8081"
+  PROVISION_TOPIC: vex-provision
+---
+# Source: provisioner/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: provisioner
+  namespace: vex
+  labels:
+    helm.sh/chart: provisioner-0.1.0
+    app.kubernetes.io/name: provisioner
+    app.kubernetes.io/instance: provisioner
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    prometheus.io/scrape: 'true'
+    prometheus.io/port: '8081'
+    prometheus.io/path: '/metrics'
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: provisioner
+      app.kubernetes.io/instance: provisioner
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: provisioner
+        app.kubernetes.io/instance: provisioner
+    spec:
+      serviceAccountName: default
+      securityContext:
+        {}
+      containers:
+        - name: provisioner
+          securityContext:
+            {}
+          image: "broswen/vex-provisioner:latest"
+          imagePullPolicy: Always
+          envFrom:
+            - configMapRef:
+                name: provisioner
+            - secretRef:
+                name: provisioner
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          resources:
+            limits:
+              cpu: 150m
+              memory: 256Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
