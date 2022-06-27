@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vex
+  namespace: vex
+  labels:
+    app: vex
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: vex
+  template:
+    metadata:
+      name: vex
+      labels:
+        app: vex
+      annotations:
+        prometheus.io/scrape: 'true'
+        prometheus.io/port: '8081'
+        prometheus.io/path: '/metrics'
+    spec:
+      restartPolicy: Always
+      containers:
+        - name: vex
+          image: broswen/vex:latest
+          imagePullPolicy: Always
+          envFrom:
+            - configMapRef:
+                name: vex
+            - secretRef:
+                name: vex

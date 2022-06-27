@@ -1,0 +1,26 @@
+name = "vex-worker"
+
+account_id = ""
+workers_dev = true
+
+compatibility_date = "2022-06-20"
+compatibility_flags = []
+
+main = "src/index.ts"
+
+kv_namespaces = [
+    { binding = "FLAG", id = "8e5b0e19f64f484ebb5031e4c0525fe6", preview_id = "" }
+]
+
+[vars]
+
+[env.staging]
+account_id = ""
+
+[env.staging.vars]
+
+
+[env.production]
+account_id = ""
+
+[env.production.vars]

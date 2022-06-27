@@ -1,0 +1,70 @@
+version: "3.9"
+services:
+  config:
+    container_name: config
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - broker
+      - postgres
+    command: sh -c "
+      sleep 4 &&
+      ./bin/vex"
+    environment:
+      BROKERS: broker:9092
+      API_PORT: 8080
+      METRICS_PORT: 8081
+      DSN: postgres://postgres:password@postgres:5432/vex
+    ports:
+      - "8080:8080"
+      - "8081:8081"
+  provisioner:
+    container_name: provisioner
+    build:
+      context: .
+      dockerfile: Dockerfile.provisioner
+    depends_on:
+      - broker
+      - postgres
+    command: sh -c "
+      sleep 4 &&
+      ./bin/provisioner"
+    environment:
+      METRICS_PORT: 8081
+      BROKERS: broker:9092
+      DSN: postgres://postgres:password@postgres:5432/vex
+      CLOUDFLARE_API_TOKEN: <api token>
+      CLOUDFLARE_ACCOUNT_ID: <account id>
+      KV_NAMESPACE_ID: <kv namespace id>
+  zookeeper:
+    image: bitnami/zookeeper:latest
+    hostname: zookeeper
+    container_name: zookeeper
+    ports:
+      - "2181:2181"
+    environment:
+      ALLOW_ANONYMOUS_LOGIN: yes
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+  broker:
+    container_name: broker
+    hostname: broker
+    image: bitnami/kafka:latest
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_CFG_ZOOKEEPER_CONNECT: zookeeper:2181
+      ALLOW_PLAINTEXT_LISTENER: yes
+      KAFKA_CFG_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://broker:9092
+  postgres:
+    image: postgres
+    environment:
+      POSTGRES_PASSWORD: password
+      POSTGRES_USER: postgres
+      POSTGRES_DB: vex
+    ports:
+      - "5432:5432"

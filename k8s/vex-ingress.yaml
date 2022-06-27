@@ -1,0 +1,19 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: vex
+  namespace: vex
+  labels:
+    name: vex
+spec:
+  rules:
+    - host: "vex.broswen.com"
+      http:
+        paths:
+          - pathType: Prefix
+            path: "/"
+            backend:
+              service:
+                name: vex
+                port:
+                  number: 8080
