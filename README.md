@@ -8,13 +8,14 @@
 - [ ] handle docker-compose initialize local postgres with schema
 - [ ] handle local provisioning for dockerfile, flag to skip api calls?
 - [ ] add a ton of tests
+- [ ] add created_on and modified_on fields to all resources
 - [ ] incremental config builds
   - store prerendered config in postgres, parse and insert/update flags as needed
 
 ### Terraform Provider
 ```hcl
-provider vex {
-  token = "api token"
+provider "vex" {
+  api_token = "api token"
   account_id = "account id"
 }
 
