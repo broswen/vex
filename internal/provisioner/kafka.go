@@ -43,6 +43,7 @@ func NewKafkaProvisioner(provisionTopic, deprovisionTopic, broker string) (*Kafk
 func (p *KafkaProvisioner) ProvisionProject(ctx context.Context, pr *project.Project) error {
 	_, _, err := p.producer.SendMessage(&sarama.ProducerMessage{
 		Topic:     p.provisionTopic,
+		Key:       sarama.StringEncoder(pr.ID),
 		Value:     sarama.StringEncoder(pr.ID),
 		Timestamp: time.Now(),
 	})

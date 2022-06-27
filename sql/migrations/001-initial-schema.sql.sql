@@ -4,7 +4,8 @@ create type FLAGTYPE as enum ('BOOLEAN', 'STRING', 'NUMBER');
 
 create table account (
     id uuid default uuid_generate_v4() primary key,
-    account_name text not null
+    account_name text not null,
+    account_description text not null
 );
 
 create table token (
