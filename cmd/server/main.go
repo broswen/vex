@@ -81,7 +81,7 @@ func main() {
 
 	// start promhttp listener on metrics port
 	m := chi.NewRouter()
-	m.Handle("/metrics", promhttp.Handler())
+	m.Handle(metricsPath, promhttp.Handler())
 	go func() {
 		if err := http.ListenAndServe(fmt.Sprintf(":%s", metricsPort), m); err != nil {
 			log.Fatal(err)
