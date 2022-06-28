@@ -37,6 +37,7 @@ services:
       CLOUDFLARE_API_TOKEN: <api token>
       CLOUDFLARE_ACCOUNT_ID: <account id>
       KV_NAMESPACE_ID: <kv namespace id>
+      SKIP_PROVISION: true
   zookeeper:
     image: bitnami/zookeeper:latest
     hostname: zookeeper
@@ -61,7 +62,11 @@ services:
       KAFKA_CFG_LISTENERS: PLAINTEXT://0.0.0.0:9092
       KAFKA_CFG_ADVERTISED_LISTENERS: PLAINTEXT://broker:9092
   postgres:
-    image: postgres
+    container_name: postgres
+    hostname: postgres
+    build:
+      context: sql
+      dockerfile: Dockerfile
     environment:
       POSTGRES_PASSWORD: password
       POSTGRES_USER: postgres

@@ -30,6 +30,11 @@ func main() {
 	// KV namespace id
 	kvNamespaceID := os.Getenv("KV_NAMESPACE_ID")
 
+	skipProvision := os.Getenv("SKIP_PROVISION")
+	if skipProvision == "true" {
+		log.Printf("SKIP_PROVISION=%s", skipProvision)
+	}
+
 	// postgres connection string
 	dsn := os.Getenv("DSN")
 	if dsn == "" {
@@ -83,7 +88,7 @@ func main() {
 
 	sarama.Logger = log.New(os.Stdout, "[sarama] ", log.LstdFlags)
 
-	consumer := NewConsumer()
+	consumer := NewConsumer(skipProvision == "true")
 	consumer.HandleFunc("vex-provision", func(message *sarama.ConsumerMessage) error {
 		log.Printf("provisioning %s", string(message.Value))
 		stats.ProjectProvisioned.Inc()
@@ -142,8 +147,9 @@ func main() {
 	}
 }
 
-func NewConsumer() *Consumer {
+func NewConsumer(skip bool) *Consumer {
 	return &Consumer{
+		skip:     skip,
 		ready:    make(chan bool),
 		handlers: make(map[string]MessageHandler),
 	}
@@ -152,6 +158,8 @@ func NewConsumer() *Consumer {
 type MessageHandler func(message *sarama.ConsumerMessage) error
 
 type Consumer struct {
+	// whether in dev mode and shouldn't actually provision anything
+	skip     bool
 	ready    chan bool
 	handlers map[string]MessageHandler
 }
@@ -159,6 +167,10 @@ type Consumer struct {
 func (c *Consumer) Handle(message *sarama.ConsumerMessage) error {
 	for k, f := range c.handlers {
 		if message.Topic == k {
+			if c.skip {
+				log.Printf("skipping message %s %s", message.Topic, message.Value)
+				return nil
+			}
 			return f(message)
 		}
 	}

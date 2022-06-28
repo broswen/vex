@@ -20,6 +20,7 @@ func Router(projectStore project.ProjectStore, flagStore flag.FlagStore, account
 
 	//disable creating accounts through api for now
 	//r.Post("/accounts", CreateAccount(accountStore))
+	r.Get("/accounts/", http.NotFound)
 	r.Get("/accounts/{accountId}", AccountAuthorizer(GetAccount(accountStore), tokenStore))
 	r.Put("/accounts/{accountId}", AccountAuthorizer(UpdateAccount(accountStore), tokenStore))
 	r.Delete("/accounts/{accountId}", AccountAuthorizer(DeleteAccount(accountStore), tokenStore))
