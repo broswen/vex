@@ -48,10 +48,6 @@ metadata:
     app.kubernetes.io/instance: provisioner
     app.kubernetes.io/version: "1.0.0"
     app.kubernetes.io/managed-by: Helm
-  annotations:
-    prometheus.io/scrape: 'true'
-    prometheus.io/port: '8081'
-    prometheus.io/path: '/metrics'
 spec:
   replicas: 1
   selector:
@@ -60,6 +56,10 @@ spec:
       app.kubernetes.io/instance: provisioner
   template:
     metadata:
+      annotations:
+        prometheus.io/path: /metrics
+        prometheus.io/port: "8081"
+        prometheus.io/scrape: "true"
       labels:
         app.kubernetes.io/name: provisioner
         app.kubernetes.io/instance: provisioner

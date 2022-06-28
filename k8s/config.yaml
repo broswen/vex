@@ -69,10 +69,6 @@ metadata:
     app.kubernetes.io/instance: config
     app.kubernetes.io/version: "1.0.0"
     app.kubernetes.io/managed-by: Helm
-  annotations:
-    prometheus.io/scrape: 'true'
-    prometheus.io/port: '8081'
-    prometheus.io/path: '/metrics'
 spec:
   replicas: 2
   selector:
@@ -81,6 +77,10 @@ spec:
       app.kubernetes.io/instance: config
   template:
     metadata:
+      annotations:
+        prometheus.io/path: /metrics
+        prometheus.io/port: "8081"
+        prometheus.io/scrape: "true"
       labels:
         app.kubernetes.io/name: config
         app.kubernetes.io/instance: config
