@@ -25,6 +25,7 @@ create table project (
 create table flag (
     id uuid default uuid_generate_v4() primary key,
     project_id uuid references project(id) on delete cascade,
+    account_id uuid references account(id) on delete cascade,
     flag_key text not null,
     flag_type FLAGTYPE not null,
     flag_value text not null,

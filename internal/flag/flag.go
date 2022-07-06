@@ -17,7 +17,8 @@ const (
 
 type Flag struct {
 	ID        string   `json:"id"`
-	ProjectID string   `json:"-" db:"project_id"`
+	ProjectID string   `json:"project_id" db:"project_id"`
+	AccountID string   `json:"account_id" db:"account_id"`
 	Key       string   `json:"key" db:"flag_key"`
 	Type      FlagType `json:"type" db:"flag_type"`
 	Value     string   `json:"value" db:"flag_value"`

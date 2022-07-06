@@ -15,6 +15,7 @@ import (
 func CreateFlag(flagStore flag.FlagStore, provisioner provisioner.Provisioner) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		projectId := chi.URLParam(r, "projectId")
+		accountId := chi.URLParam(r, "accountId")
 		f := &flag.Flag{}
 		err := json.NewDecoder(r.Body).Decode(f)
 		if err != nil {
@@ -23,6 +24,7 @@ func CreateFlag(flagStore flag.FlagStore, provisioner provisioner.Provisioner) h
 		}
 		defer r.Body.Close()
 		f.ProjectID = projectId
+		f.AccountID = accountId
 
 		if err = flag.Validate(*f); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
@@ -61,6 +63,7 @@ func UpdateFlag(flagStore flag.FlagStore, provisioner provisioner.Provisioner) h
 	return func(w http.ResponseWriter, r *http.Request) {
 		flagId := chi.URLParam(r, "flagId")
 		projectId := chi.URLParam(r, "projectId")
+		accountId := chi.URLParam(r, "accountId")
 		f := &flag.Flag{}
 		err := json.NewDecoder(r.Body).Decode(f)
 		if err != nil {
@@ -71,6 +74,7 @@ func UpdateFlag(flagStore flag.FlagStore, provisioner provisioner.Provisioner) h
 
 		f.ID = flagId
 		f.ProjectID = projectId
+		f.AccountID = accountId
 
 		if err = flag.Validate(*f); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
