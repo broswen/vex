@@ -81,6 +81,13 @@ This worker allows for fast and distributed access to the project configuration.
   }
 }
 ```
+## Client Libraries
+
+Go - https://github.com/broswen/vex-go
+
+## Terraform
+
+terraform-provider-vex - https://github.com/broswen/terraform-provider-vex
 
 ### Todo
 - [x] handle postgres errors and wrap in custom store errors (ongoing)
