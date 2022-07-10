@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"strconv"
+	"time"
 )
 
 type FlagType string
@@ -16,12 +17,14 @@ const (
 )
 
 type Flag struct {
-	ID        string   `json:"id"`
-	ProjectID string   `json:"project_id" db:"project_id"`
-	AccountID string   `json:"account_id" db:"account_id"`
-	Key       string   `json:"key" db:"flag_key"`
-	Type      FlagType `json:"type" db:"flag_type"`
-	Value     string   `json:"value" db:"flag_value"`
+	ID         string    `json:"id"`
+	ProjectID  string    `json:"project_id" db:"project_id"`
+	AccountID  string    `json:"account_id" db:"account_id"`
+	CreatedOn  time.Time `json:"created_on" db:"created_on"`
+	ModifiedOn time.Time `json:"modified_on" db:"modified_on"`
+	Key        string    `json:"key" db:"flag_key"`
+	Type       FlagType  `json:"type" db:"flag_type"`
+	Value      string    `json:"value" db:"flag_value"`
 }
 
 func (f Flag) ToJSON() ([]byte, error) {
