@@ -15,3 +15,7 @@ publish: build
 helm-template:
 	helm template config k8s/config > k8s/config.yaml
 	helm template provisioner k8s/provisioner > k8s/provisioner.yaml
+
+test: helm-template
+	go test ./...
+	kubeconform -verbose -summary -strict ./k8s/*.yaml
