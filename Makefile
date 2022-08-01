@@ -18,4 +18,4 @@ helm-template:
 
 test: helm-template
 	go test ./...
-	kubeconform -verbose -summary -strict ./k8s/*.yaml
+	kubeconform -summary -strict ./k8s/*.yaml
