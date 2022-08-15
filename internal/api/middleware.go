@@ -13,12 +13,12 @@ func AccountAuthorizer(next http.Handler, tokenStore token.TokenStore) http.Hand
 		authHeader := r.Header.Get("Authorization")
 		accountId := chi.URLParam(r, "accountId")
 		if authHeader == "" {
-			w.WriteHeader(http.StatusUnauthorized)
+			RenderError(w, ErrUnauthorized)
 			return
 		}
 		parts := strings.Split(authHeader, " ")
 		if len(parts) != 2 {
-			w.WriteHeader(http.StatusUnauthorized)
+			RenderError(w, ErrUnauthorized)
 			return
 		}
 		token := parts[1]
@@ -26,17 +26,17 @@ func AccountAuthorizer(next http.Handler, tokenStore token.TokenStore) http.Hand
 		t, err := tokenStore.Get(r.Context(), token)
 		if err != nil {
 			log.Println(err)
-			w.WriteHeader(http.StatusUnauthorized)
+			RenderError(w, ErrUnauthorized)
 			return
 		}
 		//token must match account in path
 		if t.AccountID != accountId {
-			w.WriteHeader(http.StatusUnauthorized)
+			RenderError(w, ErrUnauthorized)
 			return
 		}
 		//readonly tokens can only GET
 		if t.ReadOnly && r.Method != http.MethodGet {
-			w.WriteHeader(http.StatusUnauthorized)
+			RenderError(w, ErrUnauthorized)
 			return
 		}
 

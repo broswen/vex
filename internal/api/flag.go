@@ -2,7 +2,6 @@ package api
 
 import (
 	"encoding/json"
-	"github.com/broswen/vex/internal/db"
 	"github.com/broswen/vex/internal/flag"
 	"github.com/broswen/vex/internal/project"
 	"github.com/broswen/vex/internal/provisioner"
@@ -19,7 +18,7 @@ func CreateFlag(flagStore flag.FlagStore, provisioner provisioner.Provisioner) h
 		f := &flag.Flag{}
 		err := json.NewDecoder(r.Body).Decode(f)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			RenderError(w, ErrBadRequest.WithError(err))
 			return
 		}
 		defer r.Body.Close()
@@ -27,20 +26,15 @@ func CreateFlag(flagStore flag.FlagStore, provisioner provisioner.Provisioner) h
 		f.AccountID = accountId
 
 		if err = flag.Validate(*f); err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			RenderError(w, ErrBadRequest.WithError(err))
 			return
 		}
 
 		err = flagStore.Insert(r.Context(), f)
 
+		log.Printf("1: %#v\n", f)
 		if err != nil {
-			if err == db.ErrNotFound {
-				http.Error(w, err.Error(), http.StatusNotFound)
-			} else if err == db.ErrKeyNotUnique {
-				http.Error(w, err.Error(), http.StatusBadRequest)
-			} else {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-			}
+			RenderError(w, err)
 			return
 		}
 
@@ -53,7 +47,7 @@ func CreateFlag(flagStore flag.FlagStore, provisioner provisioner.Provisioner) h
 
 		err = json.NewEncoder(w).Encode(f)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			RenderError(w, err)
 			return
 		}
 	}
@@ -67,7 +61,7 @@ func UpdateFlag(flagStore flag.FlagStore, provisioner provisioner.Provisioner) h
 		f := &flag.Flag{}
 		err := json.NewDecoder(r.Body).Decode(f)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			RenderError(w, ErrBadRequest.WithError(err))
 			return
 		}
 		defer r.Body.Close()
@@ -77,19 +71,13 @@ func UpdateFlag(flagStore flag.FlagStore, provisioner provisioner.Provisioner) h
 		f.AccountID = accountId
 
 		if err = flag.Validate(*f); err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			RenderError(w, err)
 			return
 		}
 
 		err = flagStore.Update(r.Context(), f)
 		if err != nil {
-			if err == db.ErrNotFound {
-				http.Error(w, err.Error(), http.StatusNotFound)
-			} else if err == db.ErrKeyNotUnique {
-				http.Error(w, err.Error(), http.StatusBadRequest)
-			} else {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-			}
+			RenderError(w, err)
 			return
 		}
 		err = provisioner.ProvisionProject(r.Context(), &project.Project{ID: projectId})
@@ -101,7 +89,7 @@ func UpdateFlag(flagStore flag.FlagStore, provisioner provisioner.Provisioner) h
 
 		err = json.NewEncoder(w).Encode(f)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			RenderError(w, err)
 			return
 		}
 	}
@@ -112,12 +100,12 @@ func ListFlags(flagStore flag.FlagStore) http.HandlerFunc {
 		projectId := chi.URLParam(r, "projectId")
 		flags, err := flagStore.List(r.Context(), projectId, 100, 0)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			RenderError(w, err)
 			return
 		}
 		err = json.NewEncoder(w).Encode(flags)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			RenderError(w, err)
 			return
 		}
 	}
@@ -129,16 +117,12 @@ func GetFlag(flagStore flag.FlagStore) http.HandlerFunc {
 		flagId := chi.URLParam(r, "flagId")
 		f, err := flagStore.Get(r.Context(), flagId)
 		if err != nil {
-			if err == db.ErrNotFound {
-				http.Error(w, err.Error(), http.StatusNotFound)
-			} else {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-			}
+			RenderError(w, err)
 			return
 		}
 		err = json.NewEncoder(w).Encode(f)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			RenderError(w, err)
 			return
 		}
 	}
@@ -150,11 +134,7 @@ func DeleteFlag(flagStore flag.FlagStore, provisioner provisioner.Provisioner) h
 		flagId := chi.URLParam(r, "flagId")
 		err := flagStore.Delete(r.Context(), flagId)
 		if err != nil {
-			if err == db.ErrNotFound {
-				http.Error(w, err.Error(), http.StatusNotFound)
-			} else {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-			}
+			RenderError(w, err)
 			return
 		}
 		err = provisioner.ProvisionProject(r.Context(), &project.Project{ID: projectId})
@@ -166,7 +146,7 @@ func DeleteFlag(flagStore flag.FlagStore, provisioner provisioner.Provisioner) h
 
 		err = json.NewEncoder(w).Encode(&struct{ id string }{id: flagId})
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			RenderError(w, err)
 			return
 		}
 	}

@@ -2,7 +2,7 @@
 .PHONY: compose build publish helm-template
 
 compose:
-	docker-compose up --build
+	docker compose up --build
 
 build:
 	docker build . -f Dockerfile -t broswen/vex:latest

@@ -3,7 +3,6 @@ package account
 import (
 	"context"
 	"fmt"
-	"github.com/broswen/vex/internal/db"
 	"github.com/stretchr/testify/mock"
 	"time"
 )
@@ -42,7 +41,7 @@ func (m *MockStore) Get(ctx context.Context, id string) (*Account, error) {
 	args := m.Called()
 	a, ok := m.accounts[id]
 	if !ok {
-		return nil, db.ErrNotFound
+		return nil, ErrAccountNotFound{nil}
 	}
 	return a, args.Error(0)
 }
