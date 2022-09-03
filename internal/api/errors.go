@@ -13,7 +13,7 @@ var (
 	ErrInternalServer = NewAPIError(http.StatusInternalServerError, 9500, "internal error")
 	ErrBadRequest     = NewAPIError(http.StatusBadRequest, 9400, "bad request")
 	ErrNotFound       = NewAPIError(http.StatusNotFound, 9404, "not found")
-	ErrUnauthorized   = NewAPIError(http.StatusInternalServerError, 9401, "unauthorized")
+	ErrUnauthorized   = NewAPIError(http.StatusUnauthorized, 9401, "unauthorized")
 )
 
 type APIError struct {

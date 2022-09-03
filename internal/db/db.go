@@ -5,25 +5,26 @@ import (
 	"errors"
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v4"
+	"github.com/jackc/pgx/v4/pgxpool"
 	"log"
 	"strings"
 )
 
 type Database struct {
-	*pgx.Conn
+	*pgxpool.Pool
 }
 
 func InitDB(ctx context.Context, dsn string) (*Database, error) {
-	db, err := pgx.Connect(ctx, dsn)
+	pool, err := pgxpool.Connect(ctx, dsn)
 	if err != nil {
 		return nil, err
 	}
 
-	if err := db.Ping(ctx); err != nil {
+	if err := pool.Ping(ctx); err != nil {
 		return nil, err
 	}
 
-	return &Database{db}, nil
+	return &Database{pool}, nil
 }
 
 var (
