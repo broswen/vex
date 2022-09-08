@@ -1,6 +1,7 @@
 
 export type Env = {
   FLAG: KVNamespace
+  TOKEN: KVNamespace
 }
 
 export async function handleRequest(request: Request, env: Env) {

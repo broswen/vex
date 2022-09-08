@@ -17,7 +17,8 @@ secret:
     DSN: cG9zdGdyZXM6Ly9wb3N0Z3JlczpwYXNzd29yZEBwb3N0Z3Jlcy5wb3N0Z3Jlcy5zdmMuY2x1c3Rlci5sb2NhbDo1NDMyL3ZleA==
     CLOUDFLARE_API_TOKEN: <api token>
     CLOUDFLARE_ACCOUNT_ID: <account id>
-    KV_NAMESPACE_ID: <kv namespace id>
+    PROJECT_KV_NAMESPACE_ID: <project kv namespace id>
+    TOKEN_KV_NAMESPACE_ID: <token kv namespace id>
 
 configmap:
   data:
@@ -25,6 +26,8 @@ configmap:
     METRICS_PATH: "/metrics"
     PROVISION_TOPIC: "vex-provision"
     DEPROVISION_TOPIC: "vex-deprovision"
+    TOKEN_PROVISION_TOPIC: "vex-provision-token"
+    TOKEN_DEPROVISION_TOPIC: "vex-deprovision-token"
     BROKERS: "kafka-clusterip.kafka.svc.cluster.local:9092"
 
 imagePullSecrets: []

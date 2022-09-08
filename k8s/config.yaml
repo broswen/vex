@@ -33,6 +33,8 @@ data:
   METRICS_PATH: /metrics
   METRICS_PORT: "8081"
   PROVISION_TOPIC: vex-provision
+  TOKEN_DEPROVISION_TOPIC: vex-deprovision-token
+  TOKEN_PROVISION_TOPIC: vex-provision-token
 ---
 # Source: config/templates/service.yaml
 apiVersion: v1

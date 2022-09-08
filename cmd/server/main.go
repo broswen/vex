@@ -47,6 +47,15 @@ func main() {
 	if deprovisionTopic == "" {
 		deprovisionTopic = "vex-deprovision"
 	}
+	tokenProvisionTopic := os.Getenv("TOKEN_PROVISION_TOPIC")
+	if tokenProvisionTopic == "" {
+		tokenProvisionTopic = "vex-provision-token"
+	}
+	tokenDeprovisionTopic := os.Getenv("TOKEN_DEPROVISION_TOPIC")
+	if tokenDeprovisionTopic == "" {
+		tokenDeprovisionTopic = "vex-deprovision-token"
+	}
+
 	brokers := os.Getenv("BROKERS")
 	if brokers == "" {
 		brokers = "kafka-clusterip.kafka.svc.cluster.local:9092"
@@ -74,7 +83,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	provisioner, err := provisioner.NewKafkaProvisioner(provisionTopic, deprovisionTopic, brokers)
+	provisioner, err := provisioner.NewKafkaProvisioner(provisionTopic, deprovisionTopic, tokenProvisionTopic, tokenDeprovisionTopic, brokers)
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -25,9 +25,10 @@ func Router(projectStore project.ProjectStore, flagStore flag.FlagStore, account
 	r.Put("/accounts/{accountId}", AccountAuthorizer(UpdateAccount(accountStore), tokenStore))
 	r.Delete("/accounts/{accountId}", AccountAuthorizer(DeleteAccount(accountStore), tokenStore))
 
-	r.Post("/accounts/{accountId}/tokens", AccountAuthorizer(GenerateToken(tokenStore), tokenStore))
-	r.Put("/accounts/{accountId}/tokens/{tokenId}", AccountAuthorizer(RerollToken(tokenStore), tokenStore))
-	r.Delete("/accounts/{accountId}/tokens/{tokenId}", AccountAuthorizer(DeleteToken(tokenStore), tokenStore))
+	r.Get("/accounts/{accountId}/tokens", AccountAuthorizer(ListTokens(tokenStore), tokenStore))
+	r.Post("/accounts/{accountId}/tokens", AccountAuthorizer(GenerateToken(tokenStore, provisioner), tokenStore))
+	r.Put("/accounts/{accountId}/tokens/{tokenId}", AccountAuthorizer(RerollToken(tokenStore, provisioner), tokenStore))
+	r.Delete("/accounts/{accountId}/tokens/{tokenId}", AccountAuthorizer(DeleteToken(tokenStore, provisioner), tokenStore))
 
 	r.Post("/accounts/{accountId}/projects", AccountAuthorizer(CreateProject(projectStore), tokenStore))
 	r.Get("/accounts/{accountId}/projects", AccountAuthorizer(ListProjects(projectStore), tokenStore))

@@ -23,7 +23,7 @@ func AccountAuthorizer(next http.Handler, tokenStore token.TokenStore) http.Hand
 		}
 		token := parts[1]
 		log.Printf("found authorization token: %s", token)
-		t, err := tokenStore.Get(r.Context(), token)
+		t, err := tokenStore.GetByToken(r.Context(), token)
 		if err != nil {
 			log.Println(err)
 			RenderError(w, ErrUnauthorized)

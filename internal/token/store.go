@@ -6,9 +6,11 @@ import (
 )
 
 type TokenStore interface {
+	List(ctx context.Context, accountId string, limit, offset int64) ([]*Token, error)
 	Generate(ctx context.Context, accountId string, readOnly bool) (*Token, error)
 	Reroll(ctx context.Context, t *Token) error
 	Get(ctx context.Context, id string) (*Token, error)
+	GetByToken(ctx context.Context, token string) (*Token, error)
 	Delete(ctx context.Context, id string) error
 }
 
@@ -35,9 +37,35 @@ func (store *Store) Reroll(ctx context.Context, t *Token) error {
 
 func (store *Store) Get(ctx context.Context, id string) (*Token, error) {
 	t := &Token{}
-	err := db.PgError(store.db.QueryRow(ctx, `SELECT id, account_id, read_only, created_on, modified_on FROM token WHERE token = $1;`,
-		id).Scan(&t.ID, &t.AccountID, &t.ReadOnly, &t.CreatedOn, &t.ModifiedOn))
+	err := db.PgError(store.db.QueryRow(ctx, `SELECT id, account_id, token, read_only, created_on, modified_on FROM token WHERE id = $1;`,
+		id).Scan(&t.ID, &t.AccountID, &t.Token, &t.ReadOnly, &t.CreatedOn, &t.ModifiedOn))
 	return t, err
+}
+
+func (store *Store) GetByToken(ctx context.Context, token string) (*Token, error) {
+	t := &Token{}
+	err := db.PgError(store.db.QueryRow(ctx, `SELECT id, account_id, token, read_only, created_on, modified_on FROM token WHERE token = $1;`,
+		token).Scan(&t.ID, &t.AccountID, &token, &t.ReadOnly, &t.CreatedOn, &t.ModifiedOn))
+	return t, err
+}
+
+func (store *Store) List(ctx context.Context, accountId string, limit, offset int64) ([]*Token, error) {
+	rows, err := store.db.Query(ctx, `SELECT id, account_id, read_only, created_on, modified_on FROM token WHERE account_id = $1 OFFSET $2 LIMIT $3;`, accountId, offset, limit)
+	err = db.PgError(err)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	fs := make([]*Token, 0)
+	for rows.Next() {
+		t := &Token{}
+		err = rows.Scan(&t.ID, &t.AccountID, &t.ReadOnly, &t.CreatedOn, &t.ModifiedOn)
+		if err != nil {
+			return nil, err
+		}
+		fs = append(fs, t)
+	}
+	return fs, nil
 }
 
 func (store *Store) Delete(ctx context.Context, id string) error {

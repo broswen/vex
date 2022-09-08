@@ -11,6 +11,7 @@ import (
 	"github.com/broswen/vex/internal/project"
 	"github.com/broswen/vex/internal/provisioner"
 	"github.com/broswen/vex/internal/stats"
+	"github.com/broswen/vex/internal/token"
 	"github.com/go-chi/chi/v5"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"log"
@@ -28,7 +29,8 @@ func main() {
 	// cloudflare api token to manage KV
 	cloudflareAccountId := os.Getenv("CLOUDFLARE_ACCOUNT_ID")
 	// KV namespace id
-	kvNamespaceID := os.Getenv("KV_NAMESPACE_ID")
+	projectKVNamespaceID := os.Getenv("PROJECT_KV_NAMESPACE_ID")
+	tokenKVNamespaceID := os.Getenv("TOKEN_KV_NAMESPACE_ID")
 
 	skipProvision := os.Getenv("SKIP_PROVISION")
 	if skipProvision == "true" {
@@ -50,8 +52,12 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	tokenStore, err := token.NewPostgresStore(database)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	cloudflareProvisioner, err := provisioner.NewCloudflareProvisioner(cloudflareToken, cloudflareAccountId, kvNamespaceID, flagStore)
+	cloudflareProvisioner, err := provisioner.NewCloudflareProvisioner(cloudflareToken, cloudflareAccountId, projectKVNamespaceID, tokenKVNamespaceID, flagStore, tokenStore)
 
 	// port for prometheus
 	metricsPort := os.Getenv("METRICS_PORT")
@@ -70,7 +76,7 @@ func main() {
 	}
 	topics := os.Getenv("TOPICS")
 	if topics == "" {
-		topics = "vex-provision,vex-deprovision"
+		topics = "vex-provision,vex-deprovision,vex-provision-token,vex-deprovision-token"
 	}
 	brokers := os.Getenv("BROKERS")
 	if brokers == "" {
@@ -98,6 +104,17 @@ func main() {
 		log.Printf("deprovisioning %s", string(message.Value))
 		stats.ProjectDeprovisioned.Inc()
 		return cloudflareProvisioner.DeprovisionProject(context.Background(), &project.Project{ID: string(message.Value)})
+	})
+
+	consumer.HandleFunc("vex-provision-token", func(message *sarama.ConsumerMessage) error {
+		log.Printf("provisioning %s", string(message.Value))
+		stats.ProjectProvisioned.Inc()
+		return cloudflareProvisioner.ProvisionToken(context.Background(), &token.Token{ID: string(message.Value)})
+	})
+	consumer.HandleFunc("vex-deprovision-token", func(message *sarama.ConsumerMessage) error {
+		log.Printf("deprovisioning %s", string(message.Value))
+		stats.ProjectDeprovisioned.Inc()
+		return cloudflareProvisioner.DeprovisionToken(context.Background(), &token.Token{Token: string(message.Value)})
 	})
 
 	ctx, cancel := context.WithCancel(context.Background())

@@ -5,18 +5,21 @@ import (
 	"github.com/Shopify/sarama"
 	"github.com/broswen/vex/internal/project"
 	"github.com/broswen/vex/internal/stats"
+	"github.com/broswen/vex/internal/token"
 	"log"
 	"time"
 )
 
 type KafkaProvisioner struct {
-	provisionTopic   string
-	deprovisionTopic string
-	broker           string
-	producer         sarama.SyncProducer
+	provisionProjectTopic   string
+	deprovisionProjectTopic string
+	provisionTokenTopic     string
+	deprovisionTokenTopic   string
+	broker                  string
+	producer                sarama.SyncProducer
 }
 
-func NewKafkaProvisioner(provisionTopic, deprovisionTopic, broker string) (*KafkaProvisioner, error) {
+func NewKafkaProvisioner(provisionProjectTopic, deprovisionProjectTopic, provisionTokenTopic, deprovisionTokenTopic string, broker string) (*KafkaProvisioner, error) {
 	config := sarama.NewConfig()
 	config.ClientID = "vex-config"
 	version, err := sarama.ParseKafkaVersion("3.1.0")
@@ -33,16 +36,18 @@ func NewKafkaProvisioner(provisionTopic, deprovisionTopic, broker string) (*Kafk
 		return nil, err
 	}
 	return &KafkaProvisioner{
-		provisionTopic:   provisionTopic,
-		deprovisionTopic: deprovisionTopic,
-		broker:           broker,
-		producer:         producer,
+		provisionProjectTopic:   provisionProjectTopic,
+		deprovisionProjectTopic: deprovisionProjectTopic,
+		provisionTokenTopic:     provisionTokenTopic,
+		deprovisionTokenTopic:   deprovisionTokenTopic,
+		broker:                  broker,
+		producer:                producer,
 	}, nil
 }
 
 func (p *KafkaProvisioner) ProvisionProject(ctx context.Context, pr *project.Project) error {
 	_, _, err := p.producer.SendMessage(&sarama.ProducerMessage{
-		Topic:     p.provisionTopic,
+		Topic:     p.provisionProjectTopic,
 		Key:       sarama.StringEncoder(pr.ID),
 		Value:     sarama.StringEncoder(pr.ID),
 		Timestamp: time.Now(),
@@ -55,8 +60,35 @@ func (p *KafkaProvisioner) ProvisionProject(ctx context.Context, pr *project.Pro
 
 func (p *KafkaProvisioner) DeprovisionProject(ctx context.Context, pr *project.Project) error {
 	_, _, err := p.producer.SendMessage(&sarama.ProducerMessage{
-		Topic:     p.deprovisionTopic,
+		Topic:     p.deprovisionProjectTopic,
+		Key:       sarama.StringEncoder(pr.ID),
 		Value:     sarama.StringEncoder(pr.ID),
+		Timestamp: time.Now(),
+	})
+	if err != nil {
+		stats.DeprovisionError.Inc()
+	}
+	return err
+}
+
+func (p *KafkaProvisioner) ProvisionToken(ctx context.Context, t *token.Token) error {
+	_, _, err := p.producer.SendMessage(&sarama.ProducerMessage{
+		Topic:     p.provisionTokenTopic,
+		Key:       sarama.StringEncoder(t.ID),
+		Value:     sarama.StringEncoder(t.ID),
+		Timestamp: time.Now(),
+	})
+	if err != nil {
+		stats.ProvisionError.Inc()
+	}
+	return err
+}
+
+func (p *KafkaProvisioner) DeprovisionToken(ctx context.Context, t *token.Token) error {
+	_, _, err := p.producer.SendMessage(&sarama.ProducerMessage{
+		Topic:     p.deprovisionTokenTopic,
+		Key:       sarama.StringEncoder(t.Token),
+		Value:     sarama.StringEncoder(t.Token),
 		Timestamp: time.Now(),
 	})
 	if err != nil {

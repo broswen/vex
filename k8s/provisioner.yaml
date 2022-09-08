@@ -15,7 +15,8 @@ data:
   CLOUDFLARE_ACCOUNT_ID: <account id>
   CLOUDFLARE_API_TOKEN: <api token>
   DSN: cG9zdGdyZXM6Ly9wb3N0Z3JlczpwYXNzd29yZEBwb3N0Z3Jlcy5wb3N0Z3Jlcy5zdmMuY2x1c3Rlci5sb2NhbDo1NDMyL3ZleA==
-  KV_NAMESPACE_ID: <kv namespace id>
+  PROJECT_KV_NAMESPACE_ID: <project kv namespace id>
+  TOKEN_KV_NAMESPACE_ID: <token kv namespace id>
 ---
 # Source: provisioner/templates/configmap.yaml
 apiVersion: v1
@@ -35,6 +36,8 @@ data:
   METRICS_PATH: /metrics
   METRICS_PORT: "8081"
   PROVISION_TOPIC: vex-provision
+  TOKEN_DEPROVISION_TOPIC: vex-deprovision-token
+  TOKEN_PROVISION_TOPIC: vex-provision-token
 ---
 # Source: provisioner/templates/deployment.yaml
 apiVersion: apps/v1

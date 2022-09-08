@@ -22,6 +22,8 @@ configmap:
     METRICS_PATH: "/metrics"
     PROVISION_TOPIC: "vex-provision"
     DEPROVISION_TOPIC: "vex-deprovision"
+    TOKEN_PROVISION_TOPIC: "vex-provision-token"
+    TOKEN_DEPROVISION_TOPIC: "vex-deprovision-token"
     BROKERS: "kafka-clusterip.kafka.svc.cluster.local:9092"
 
 imagePullSecrets: []

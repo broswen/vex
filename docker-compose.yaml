@@ -36,7 +36,8 @@ services:
       DSN: postgres://postgres:password@postgres:5432/vex
       CLOUDFLARE_API_TOKEN: <api token>
       CLOUDFLARE_ACCOUNT_ID: <account id>
-      KV_NAMESPACE_ID: <kv namespace id>
+      PROJECT_KV_NAMESPACE_ID: <kv namespace id>
+      TOKEN_KV_NAMESPACE_ID: <kv namespace id>
       SKIP_PROVISION: true
   zookeeper:
     image: bitnami/zookeeper:latest
