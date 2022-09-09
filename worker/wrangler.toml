@@ -9,7 +9,7 @@ compatibility_flags = []
 main = "src/index.ts"
 
 kv_namespaces = [
-    { binding = "FLAG", id = "8e5b0e19f64f484ebb5031e4c0525fe6", preview_id = "" }
+    { binding = "FLAG", id = "8e5b0e19f64f484ebb5031e4c0525fe6", preview_id = "" },
     { binding = "TOKEN", id = "f8b2a481725b4d4197c4a243b35a820f", preview_id = "" }
 ]
 

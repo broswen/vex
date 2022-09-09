@@ -9,8 +9,8 @@ type ProjectStore interface {
 	List(ctx context.Context, accountId string, limit, offset int64) ([]*Project, error)
 	Insert(ctx context.Context, p *Project) error
 	Update(ctx context.Context, p *Project) error
-	Get(ctx context.Context, projectId, accountId string) (*Project, error)
-	Delete(ctx context.Context, projectId, accountId string) error
+	Get(ctx context.Context, projectId string) (*Project, error)
+	Delete(ctx context.Context, projectId string) error
 }
 
 type Store struct {
@@ -80,10 +80,10 @@ func (store *Store) Update(ctx context.Context, p *Project) error {
 	return nil
 }
 
-func (store *Store) Get(ctx context.Context, projectId, accountId string) (*Project, error) {
+func (store *Store) Get(ctx context.Context, projectId string) (*Project, error) {
 	p := &Project{}
-	err := db.PgError(store.db.QueryRow(ctx, `SELECT id, account_id, project_name, project_description, created_on, modified_on FROM project WHERE id = $1 AND account_id = $2;`,
-		projectId, accountId).Scan(&p.ID, &p.AccountID, &p.Name, &p.Description, &p.CreatedOn, &p.ModifiedOn))
+	err := db.PgError(store.db.QueryRow(ctx, `SELECT id, account_id, project_name, project_description, created_on, modified_on FROM project WHERE id = $1;`,
+		projectId).Scan(&p.ID, &p.AccountID, &p.Name, &p.Description, &p.CreatedOn, &p.ModifiedOn))
 
 	if err != nil {
 		switch err {
@@ -98,8 +98,8 @@ func (store *Store) Get(ctx context.Context, projectId, accountId string) (*Proj
 	return p, nil
 }
 
-func (store *Store) Delete(ctx context.Context, projectId, accountId string) error {
-	res, err := store.db.Exec(ctx, `DELETE FROM project WHERE id = $1 AND account_id = $2;`, projectId, accountId)
+func (store *Store) Delete(ctx context.Context, projectId string) error {
+	res, err := store.db.Exec(ctx, `DELETE FROM project WHERE id = $1;`, projectId)
 	err = db.PgError(err)
 	if res.RowsAffected() == 0 && err == nil {
 		return ErrProjectNotFound{db.ErrNotFound}

@@ -48,6 +48,10 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	projectStore, err := project.NewPostgresStore(database)
+	if err != nil {
+		log.Fatal(err)
+	}
 	flagStore, err := flag2.NewPostgresStore(database)
 	if err != nil {
 		log.Fatal(err)
@@ -57,7 +61,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	cloudflareProvisioner, err := provisioner.NewCloudflareProvisioner(cloudflareToken, cloudflareAccountId, projectKVNamespaceID, tokenKVNamespaceID, flagStore, tokenStore)
+	cloudflareProvisioner, err := provisioner.NewCloudflareProvisioner(cloudflareToken, cloudflareAccountId, projectKVNamespaceID, tokenKVNamespaceID, projectStore, flagStore, tokenStore)
 
 	// port for prometheus
 	metricsPort := os.Getenv("METRICS_PORT")

@@ -84,9 +84,9 @@ func ListProjects(projectStore project.ProjectStore) http.HandlerFunc {
 
 func GetProject(projectStore project.ProjectStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		accountId := chi.URLParam(r, "accountId")
+		//accountId := chi.URLParam(r, "accountId")
 		projectId := chi.URLParam(r, "projectId")
-		p, err := projectStore.Get(r.Context(), projectId, accountId)
+		p, err := projectStore.Get(r.Context(), projectId)
 		if err != nil {
 			RenderError(w, err)
 			return
@@ -102,8 +102,8 @@ func GetProject(projectStore project.ProjectStore) http.HandlerFunc {
 func DeleteProject(projectStore project.ProjectStore, provisioner provisioner.Provisioner) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		projectId := chi.URLParam(r, "projectId")
-		accountId := chi.URLParam(r, "accountId")
-		err := projectStore.Delete(r.Context(), projectId, accountId)
+		//accountId := chi.URLParam(r, "accountId")
+		err := projectStore.Delete(r.Context(), projectId)
 		if err != nil {
 			RenderError(w, err)
 			return

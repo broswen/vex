@@ -9,17 +9,16 @@ import (
 	"log"
 )
 
-// Ideally this should be replaced with a client that submits change events to a kafka topic
-// then a group of workers can process the flag changes in order and scale properly
 type CloudflareProvisioner struct {
 	api                  *cloudflare.API
 	projectKVNamespaceID string
 	tokenKVNamespaceID   string
+	projectStore         project.ProjectStore
 	flagStore            flag.FlagStore
 	tokenStore           token.TokenStore
 }
 
-func NewCloudflareProvisioner(apiToken, accountID, projectVNamespaceID, tokenKVNamespaceID string, flagStore flag.FlagStore, tokenStore token.TokenStore) (*CloudflareProvisioner, error) {
+func NewCloudflareProvisioner(apiToken, accountID, projectVNamespaceID, tokenKVNamespaceID string, projectStore project.ProjectStore, flagStore flag.FlagStore, tokenStore token.TokenStore) (*CloudflareProvisioner, error) {
 	api, err := cloudflare.NewWithAPIToken(apiToken)
 	api.AccountID = accountID
 	if err != nil {
@@ -29,12 +28,17 @@ func NewCloudflareProvisioner(apiToken, accountID, projectVNamespaceID, tokenKVN
 		api:                  api,
 		projectKVNamespaceID: projectVNamespaceID,
 		tokenKVNamespaceID:   tokenKVNamespaceID,
+		projectStore:         projectStore,
 		flagStore:            flagStore,
 		tokenStore:           tokenStore,
 	}, nil
 }
 
 func (p *CloudflareProvisioner) ProvisionProject(ctx context.Context, pr *project.Project) error {
+	project, err := p.projectStore.Get(ctx, pr.ID)
+	if err != nil {
+		return err
+	}
 	flags, err := p.flagStore.List(ctx, pr.ID, 1000, 0)
 	if err != nil {
 		return err
@@ -45,9 +49,9 @@ func (p *CloudflareProvisioner) ProvisionProject(ctx context.Context, pr *projec
 	}
 	resp, err := p.api.WriteWorkersKVBulk(ctx, p.projectKVNamespaceID, cloudflare.WorkersKVBulkWriteRequest{
 		{
-			Key:      pr.ID,
+			Key:      project.ID,
 			Value:    string(rendered),
-			Metadata: pr.AccountID,
+			Metadata: project.AccountID,
 		},
 	})
 
@@ -66,14 +70,14 @@ func (p *CloudflareProvisioner) DeprovisionProject(ctx context.Context, pr *proj
 }
 
 func (p *CloudflareProvisioner) ProvisionToken(ctx context.Context, t *token.Token) error {
-	token, err := p.tokenStore.Get(ctx, t.ID)
+	tok, err := p.tokenStore.Get(ctx, t.ID)
 	if err != nil {
 		return err
 	}
 	resp, err := p.api.WriteWorkersKVBulk(ctx, p.tokenKVNamespaceID, cloudflare.WorkersKVBulkWriteRequest{
 		{
-			Key:   token.Token,
-			Value: token.AccountID,
+			Key:   tok.Token,
+			Value: tok.AccountID,
 		},
 	})
 
