@@ -45,7 +45,7 @@ func translateError(err error) *APIError {
 	case account.ErrInvalidData,
 		project.ErrInvalidData,
 		flag.ErrInvalidData:
-		return ErrBadRequest
+		return ErrBadRequest.WithError(err)
 	case flag.ErrKeyNotUnique:
 		return ErrBadRequest.WithError(err)
 	default:

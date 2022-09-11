@@ -17,6 +17,7 @@ func Router(projectStore project.ProjectStore, flagStore flag.FlagStore, account
 	r.Use(middleware.Heartbeat("/healthz"))
 	r.Use(middleware.Logger)
 	r.Use(middleware.RealIP)
+	r.Use(middleware.SetHeader("Content-Type", "application/json"))
 
 	//disable creating accounts through api for now
 	//r.Post("/accounts", CreateAccount(accountStore))

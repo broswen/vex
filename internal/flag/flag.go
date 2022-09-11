@@ -33,22 +33,22 @@ func (f Flag) ToJSON() ([]byte, error) {
 
 func Validate(f Flag) error {
 	if f.ProjectID == "" {
-		return errors.New("project id must not be empty")
+		return ErrInvalidData{errors.New("project id must not be empty")}
 	}
 
 	if f.Key == "" {
-		return errors.New("flag key must not be empty")
+		return ErrInvalidData{errors.New("flag key must not be empty")}
 	}
 
 	switch f.Type {
 	case BOOLEAN:
 		if f.Value != "false" && f.Value != "true" {
-			return errors.New("invalid value for boolean flag")
+			return ErrInvalidData{errors.New("invalid value for boolean flag")}
 		}
 	case NUMBER:
 		_, err := strconv.ParseFloat(f.Value, 64)
 		if err != nil {
-			return errors.New("invalid value for number flag")
+			return ErrInvalidData{errors.New("invalid value for number flag")}
 		}
 	case STRING:
 	default:
