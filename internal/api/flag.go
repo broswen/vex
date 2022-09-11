@@ -7,7 +7,7 @@ import (
 	"github.com/broswen/vex/internal/provisioner"
 	"github.com/broswen/vex/internal/stats"
 	"github.com/go-chi/chi/v5"
-	"log"
+	"github.com/rs/zerolog/log"
 	"net/http"
 )
 
@@ -32,7 +32,6 @@ func CreateFlag(flagStore flag.FlagStore, provisioner provisioner.Provisioner) h
 
 		err = flagStore.Insert(r.Context(), f)
 
-		log.Printf("1: %#v\n", f)
 		if err != nil {
 			RenderError(w, err)
 			return
@@ -40,7 +39,7 @@ func CreateFlag(flagStore flag.FlagStore, provisioner provisioner.Provisioner) h
 
 		err = provisioner.ProvisionProject(r.Context(), &project.Project{ID: projectId})
 		if err != nil {
-			log.Printf("provision %s: %v", projectId, err)
+			log.Warn().Str("id", projectId).Err(err).Msg("could not provision project")
 		}
 
 		stats.FlagCreated.Inc()
@@ -82,7 +81,7 @@ func UpdateFlag(flagStore flag.FlagStore, provisioner provisioner.Provisioner) h
 		}
 		err = provisioner.ProvisionProject(r.Context(), &project.Project{ID: projectId})
 		if err != nil {
-			log.Printf("provision %s: %v", projectId, err)
+			log.Warn().Str("id", projectId).Err(err).Msg("could not provision project")
 		}
 
 		stats.FlagUpdated.Inc()
@@ -139,7 +138,7 @@ func DeleteFlag(flagStore flag.FlagStore, provisioner provisioner.Provisioner) h
 		}
 		err = provisioner.ProvisionProject(r.Context(), &project.Project{ID: projectId})
 		if err != nil {
-			log.Printf("provision %s: %v", projectId, err)
+			log.Warn().Str("id", projectId).Err(err).Msg("could not provision project")
 		}
 
 		stats.FlagDeleted.Inc()

@@ -41,4 +41,16 @@ var (
 	FlagDeleted = promauto.NewCounter(prometheus.CounterOpts{
 		Name: "flag_deleted",
 	})
+
+	TokenCreated = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "token_created",
+	})
+
+	TokenRolled = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "token_rolled",
+	})
+
+	TokenDeleted = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "token_deleted",
+	})
 )

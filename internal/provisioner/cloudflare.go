@@ -6,7 +6,7 @@ import (
 	"github.com/broswen/vex/internal/project"
 	"github.com/broswen/vex/internal/token"
 	"github.com/cloudflare/cloudflare-go"
-	"log"
+	"github.com/rs/zerolog/log"
 )
 
 type CloudflareProvisioner struct {
@@ -56,7 +56,8 @@ func (p *CloudflareProvisioner) ProvisionProject(ctx context.Context, pr *projec
 	})
 
 	if !resp.Success {
-		log.Println(resp.Messages, resp.Errors)
+		log.Warn().Msgf("errors: %s", resp.Errors)
+		log.Warn().Msgf("messages: %s", resp.Messages)
 	}
 	return err
 }
@@ -64,7 +65,8 @@ func (p *CloudflareProvisioner) ProvisionProject(ctx context.Context, pr *projec
 func (p *CloudflareProvisioner) DeprovisionProject(ctx context.Context, pr *project.Project) error {
 	resp, err := p.api.DeleteWorkersKV(ctx, p.projectKVNamespaceID, pr.ID)
 	if !resp.Success {
-		log.Println(resp.Messages, resp.Errors)
+		log.Warn().Msgf("errors: %s", resp.Errors)
+		log.Warn().Msgf("messages: %s", resp.Messages)
 	}
 	return err
 }
@@ -82,7 +84,8 @@ func (p *CloudflareProvisioner) ProvisionToken(ctx context.Context, t *token.Tok
 	})
 
 	if !resp.Success {
-		log.Println(resp.Messages, resp.Errors)
+		log.Warn().Msgf("errors: %s", resp.Errors)
+		log.Warn().Msgf("messages: %s", resp.Messages)
 	}
 	return err
 }
@@ -90,7 +93,8 @@ func (p *CloudflareProvisioner) ProvisionToken(ctx context.Context, t *token.Tok
 func (p *CloudflareProvisioner) DeprovisionToken(ctx context.Context, t *token.Token) error {
 	resp, err := p.api.DeleteWorkersKV(ctx, p.tokenKVNamespaceID, t.Token)
 	if !resp.Success {
-		log.Println(resp.Messages, resp.Errors)
+		log.Warn().Msgf("errors: %s", resp.Errors)
+		log.Warn().Msgf("messages: %s", resp.Messages)
 	}
 	return err
 }

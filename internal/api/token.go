@@ -4,9 +4,10 @@ import (
 	"encoding/json"
 	"github.com/broswen/vex/internal/db"
 	"github.com/broswen/vex/internal/provisioner"
+	"github.com/broswen/vex/internal/stats"
 	"github.com/broswen/vex/internal/token"
 	"github.com/go-chi/chi/v5"
-	"log"
+	"github.com/rs/zerolog/log"
 	"net/http"
 )
 
@@ -37,9 +38,11 @@ func GenerateToken(tokenStore token.TokenStore, provisioner provisioner.Provisio
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+		stats.TokenCreated.Inc()
+
 		err = provisioner.ProvisionToken(r.Context(), t)
 		if err != nil {
-			log.Printf("provision %s: %v", t.ID, err)
+			log.Warn().Str("id", t.ID).Err(err).Msg("could not provision token")
 		}
 		err = json.NewEncoder(w).Encode(t)
 		if err != nil {
@@ -74,16 +77,17 @@ func RerollToken(tokenStore token.TokenStore, provisioner provisioner.Provisione
 			}
 			return
 		}
+		stats.TokenRolled.Inc()
 
 		err = provisioner.ProvisionToken(r.Context(), t)
 		if err != nil {
-			log.Printf("provision %s: %v", t.ID, err)
+			log.Warn().Str("id", t.ID).Err(err).Msg("could not provision new token")
 		}
 
 		//deprovision old token value
 		err = provisioner.DeprovisionToken(r.Context(), &token.Token{Token: oldToken})
 		if err != nil {
-			log.Printf("deprovision %s: %v", tokenId, err)
+			log.Warn().Str("id", t.ID).Err(err).Msg("could not deprovision old token")
 		}
 
 		err = json.NewEncoder(w).Encode(t)
@@ -116,9 +120,11 @@ func DeleteToken(tokenStore token.TokenStore, provisioner provisioner.Provisione
 			}
 			return
 		}
+		stats.TokenDeleted.Inc()
+
 		err = provisioner.DeprovisionToken(r.Context(), &token.Token{Token: t.Token})
 		if err != nil {
-			log.Printf("deprovision %s: %v", tokenId, err)
+			log.Warn().Str("id", t.ID).Err(err).Msg("could not deprovision token")
 		}
 		err = json.NewEncoder(w).Encode(&struct{ id string }{id: tokenId})
 		if err != nil {

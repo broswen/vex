@@ -12,16 +12,18 @@ import (
 	"github.com/broswen/vex/internal/token"
 	"github.com/go-chi/chi/v5"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"log"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"net/http"
 	"os"
 )
 
 func main() {
+	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
 	// postgres connection string
 	dsn := os.Getenv("DSN")
 	if dsn == "" {
-		log.Fatalf("postgres DSN is empty")
+		log.Fatal().Msg("postgres DSN is empty")
 	}
 	// port for api
 	apiPort := os.Getenv("API_PORT")
@@ -64,28 +66,28 @@ func main() {
 	//	initialize database connection
 	database, err := db.InitDB(context.Background(), dsn)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal().Err(err)
 	}
 	projectStore, err := project.NewPostgresStore(database)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal().Err(err)
 	}
 	flagStore, err := flag.NewPostgresStore(database)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal().Err(err)
 	}
 	accountStore, err := account.NewPostgresStore(database)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal().Err(err)
 	}
 	tokenStore, err := token.NewPostgresStore(database)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal().Err(err)
 	}
 
 	provisioner, err := provisioner.NewKafkaProvisioner(provisionTopic, deprovisionTopic, tokenProvisionTopic, tokenDeprovisionTopic, brokers)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal().Err(err)
 	}
 
 	// start promhttp listener on metrics port
@@ -93,14 +95,14 @@ func main() {
 	m.Handle(metricsPath, promhttp.Handler())
 	go func() {
 		if err := http.ListenAndServe(fmt.Sprintf(":%s", metricsPort), m); err != nil {
-			log.Fatal(err)
+			log.Fatal().Err(err)
 		}
 	}()
 
 	// start api listener on api port
 	r := api.Router(projectStore, flagStore, accountStore, tokenStore, provisioner)
 	if err := http.ListenAndServe(fmt.Sprintf(":%s", apiPort), r); err != nil {
-		log.Fatal(err)
+		log.Fatal().Err(err)
 	}
 
 	//	listen for os signals?

@@ -6,7 +6,7 @@ import (
 	"github.com/broswen/vex/internal/project"
 	"github.com/broswen/vex/internal/stats"
 	"github.com/broswen/vex/internal/token"
-	"log"
+	"github.com/rs/zerolog/log"
 	"time"
 )
 
@@ -24,7 +24,7 @@ func NewKafkaProvisioner(provisionProjectTopic, deprovisionProjectTopic, provisi
 	config.ClientID = "vex-config"
 	version, err := sarama.ParseKafkaVersion("3.1.0")
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal().Err(err)
 	}
 	config.Version = version
 	config.Producer.Return.Errors = true

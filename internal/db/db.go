@@ -6,7 +6,7 @@ import (
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
-	"log"
+	"github.com/rs/zerolog/log"
 	"strings"
 )
 
@@ -38,16 +38,17 @@ func PgError(err error) error {
 	if err == nil {
 		return nil
 	}
-	log.Println(err.Error())
+	log.Error().Err(err)
 
 	var pgError *pgconn.PgError
 	if errors.As(err, &pgError) {
-		log.Println(pgError.Code)
-		log.Println(pgError.Detail)
-		log.Println(pgError.Message)
-		log.Println(pgError.ConstraintName)
-		log.Println(pgError.TableName)
-		log.Println(pgError.ColumnName)
+		log.Warn().
+			Str("code", pgError.Code).
+			Str("message", pgError.Message).
+			Str("detail", pgError.Detail).
+			Str("constraint", pgError.ConstraintName).
+			Str("table", pgError.TableName).
+			Str("column", pgError.ColumnName)
 
 		//https://www.postgresql.org/docs/11/errcodes-appendix.html
 		//convert postgres error codes to user friendly errors

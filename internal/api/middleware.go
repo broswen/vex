@@ -3,7 +3,7 @@ package api
 import (
 	"github.com/broswen/vex/internal/token"
 	"github.com/go-chi/chi/v5"
-	"log"
+	"github.com/rs/zerolog/log"
 	"net/http"
 	"strings"
 )
@@ -22,10 +22,10 @@ func AccountAuthorizer(next http.Handler, tokenStore token.TokenStore) http.Hand
 			return
 		}
 		token := parts[1]
-		log.Printf("found authorization token: %s", token)
+		log.Debug().Str("token", token).Msg("found authorization token")
 		t, err := tokenStore.GetByToken(r.Context(), token)
 		if err != nil {
-			log.Println(err)
+			log.Debug().Err(err).Msg("couldn't get by token")
 			RenderError(w, ErrUnauthorized)
 			return
 		}

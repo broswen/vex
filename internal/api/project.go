@@ -6,7 +6,7 @@ import (
 	"github.com/broswen/vex/internal/provisioner"
 	"github.com/broswen/vex/internal/stats"
 	"github.com/go-chi/chi/v5"
-	"log"
+	"github.com/rs/zerolog/log"
 	"net/http"
 )
 
@@ -110,7 +110,7 @@ func DeleteProject(projectStore project.ProjectStore, provisioner provisioner.Pr
 		}
 		err = provisioner.DeprovisionProject(r.Context(), &project.Project{ID: projectId})
 		if err != nil {
-			log.Printf("deprovision %s: %v", projectId, err)
+			log.Warn().Str("id", projectId).Err(err).Msg("could not deprovision project")
 		}
 		stats.ProjectDeleted.Inc()
 		err = json.NewEncoder(w).Encode(&struct{ id string }{id: projectId})
