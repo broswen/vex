@@ -19,9 +19,17 @@ func Router(projectStore project.ProjectStore, flagStore flag.FlagStore, account
 	r.Use(middleware.RealIP)
 	r.Use(middleware.SetHeader("Content-Type", "application/json"))
 
+	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
+		writeErr(w, nil, ErrNotFound)
+	})
+
+	r.Get("/healthcheck", func(w http.ResponseWriter, r *http.Request) {
+		writeOK(w, http.StatusOK, "OK")
+	})
+
 	//disable creating accounts through api for now
 	//r.Post("/accounts", CreateAccount(accountStore))
-	r.Get("/accounts/", http.NotFound)
+	//r.Get("/accounts/", http.NotFound)
 	r.Get("/accounts/{accountId}", AccountAuthorizer(GetAccount(accountStore), tokenStore))
 	r.Put("/accounts/{accountId}", AccountAuthorizer(UpdateAccount(accountStore), tokenStore))
 	r.Delete("/accounts/{accountId}", AccountAuthorizer(DeleteAccount(accountStore), tokenStore))
@@ -37,10 +45,10 @@ func Router(projectStore project.ProjectStore, flagStore flag.FlagStore, account
 	r.Get("/accounts/{accountId}/projects/{projectId}", AccountAuthorizer(GetProject(projectStore), tokenStore))
 	r.Delete("/accounts/{accountId}/projects/{projectId}", AccountAuthorizer(DeleteProject(projectStore, provisioner), tokenStore))
 
-	r.Post("/accounts/{accountId}/projects/{projectId}/flags", AccountAuthorizer(CreateFlag(flagStore, provisioner), tokenStore))
-	r.Get("/accounts/{accountId}/projects/{projectId}/flags", AccountAuthorizer(ListFlags(flagStore), tokenStore))
-	r.Put("/accounts/{accountId}/projects/{projectId}/flags/{flagId}", AccountAuthorizer(UpdateFlag(flagStore, provisioner), tokenStore))
+	r.Post("/accounts/{accountId}/projects/{projectId}/flags", AccountAuthorizer(CreateFlag(flagStore, projectStore, provisioner), tokenStore))
+	r.Get("/accounts/{accountId}/projects/{projectId}/flags", AccountAuthorizer(ListFlags(flagStore, projectStore), tokenStore))
+	r.Put("/accounts/{accountId}/projects/{projectId}/flags/{flagId}", AccountAuthorizer(UpdateFlag(flagStore, projectStore, provisioner), tokenStore))
 	r.Get("/accounts/{accountId}/projects/{projectId}/flags/{flagId}", AccountAuthorizer(GetFlag(flagStore), tokenStore))
-	r.Delete("/accounts/{accountId}/projects/{projectId}/flags/{flagId}", AccountAuthorizer(DeleteFlag(flagStore, provisioner), tokenStore))
+	r.Delete("/accounts/{accountId}/projects/{projectId}/flags/{flagId}", AccountAuthorizer(DeleteFlag(flagStore, projectStore, provisioner), tokenStore))
 	return r
 }

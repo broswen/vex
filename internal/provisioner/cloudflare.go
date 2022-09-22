@@ -56,8 +56,8 @@ func (p *CloudflareProvisioner) ProvisionProject(ctx context.Context, pr *projec
 	})
 
 	if !resp.Success {
-		log.Warn().Msgf("errors: %s", resp.Errors)
-		log.Warn().Msgf("messages: %s", resp.Messages)
+		log.Warn().Msgf("errors: %v", resp.Errors)
+		log.Warn().Msgf("messages: %v", resp.Messages)
 	}
 	return err
 }
@@ -65,8 +65,8 @@ func (p *CloudflareProvisioner) ProvisionProject(ctx context.Context, pr *projec
 func (p *CloudflareProvisioner) DeprovisionProject(ctx context.Context, pr *project.Project) error {
 	resp, err := p.api.DeleteWorkersKV(ctx, p.projectKVNamespaceID, pr.ID)
 	if !resp.Success {
-		log.Warn().Msgf("errors: %s", resp.Errors)
-		log.Warn().Msgf("messages: %s", resp.Messages)
+		log.Warn().Msgf("errors: %v", resp.Errors)
+		log.Warn().Msgf("messages: %v", resp.Messages)
 	}
 	return err
 }
@@ -84,8 +84,8 @@ func (p *CloudflareProvisioner) ProvisionToken(ctx context.Context, t *token.Tok
 	})
 
 	if !resp.Success {
-		log.Warn().Msgf("errors: %s", resp.Errors)
-		log.Warn().Msgf("messages: %s", resp.Messages)
+		log.Warn().Msgf("errors: %v", resp.Errors)
+		log.Warn().Msgf("messages: %v", resp.Messages)
 	}
 	return err
 }
@@ -93,8 +93,8 @@ func (p *CloudflareProvisioner) ProvisionToken(ctx context.Context, t *token.Tok
 func (p *CloudflareProvisioner) DeprovisionToken(ctx context.Context, t *token.Token) error {
 	resp, err := p.api.DeleteWorkersKV(ctx, p.tokenKVNamespaceID, t.Token)
 	if !resp.Success {
-		log.Warn().Msgf("errors: %s", resp.Errors)
-		log.Warn().Msgf("messages: %s", resp.Messages)
+		log.Warn().Msgf("errors: %v", resp.Errors)
+		log.Warn().Msgf("messages: %v", resp.Messages)
 	}
 	return err
 }

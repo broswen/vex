@@ -1,7 +1,6 @@
 package api
 
 import (
-	"encoding/json"
 	"github.com/broswen/vex/internal/project"
 	"github.com/broswen/vex/internal/provisioner"
 	"github.com/broswen/vex/internal/stats"
@@ -14,9 +13,9 @@ func CreateProject(projectStore project.ProjectStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		accountId := chi.URLParam(r, "accountId")
 		p := &project.Project{}
-		err := json.NewDecoder(r.Body).Decode(p)
+		err := readJSON(w, r, p)
 		if err != nil {
-			RenderError(w, ErrBadRequest.WithError(err))
+			writeErr(w, nil, ErrBadRequest.WithError(err))
 			return
 		}
 		defer r.Body.Close()
@@ -24,13 +23,13 @@ func CreateProject(projectStore project.ProjectStore) http.HandlerFunc {
 		err = projectStore.Insert(r.Context(), p)
 
 		if err != nil {
-			RenderError(w, err)
+			writeErr(w, nil, err)
 			return
 		}
 		stats.ProjectCreated.Inc()
-		err = json.NewEncoder(w).Encode(p)
+		err = writeOK(w, http.StatusOK, p)
 		if err != nil {
-			RenderError(w, err)
+			writeErr(w, nil, err)
 			return
 		}
 	}
@@ -41,9 +40,9 @@ func UpdateProject(projectStore project.ProjectStore) http.HandlerFunc {
 		accountId := chi.URLParam(r, "accountId")
 		projectId := chi.URLParam(r, "projectId")
 		p := &project.Project{}
-		err := json.NewDecoder(r.Body).Decode(p)
+		err := readJSON(w, r, p)
 		if err != nil {
-			RenderError(w, ErrBadRequest.WithError(err))
+			writeErr(w, nil, ErrBadRequest.WithError(err))
 			return
 		}
 		defer r.Body.Close()
@@ -54,13 +53,12 @@ func UpdateProject(projectStore project.ProjectStore) http.HandlerFunc {
 		err = projectStore.Update(r.Context(), p)
 
 		if err != nil {
-			RenderError(w, err)
+			writeErr(w, nil, err)
 			return
 		}
-
-		err = json.NewEncoder(w).Encode(p)
+		err = writeOK(w, http.StatusOK, p)
 		if err != nil {
-			RenderError(w, err)
+			writeErr(w, nil, err)
 			return
 		}
 	}
@@ -71,12 +69,12 @@ func ListProjects(projectStore project.ProjectStore) http.HandlerFunc {
 		accountId := chi.URLParam(r, "accountId")
 		projects, err := projectStore.List(r.Context(), accountId, 100, 0)
 		if err != nil {
-			RenderError(w, err)
+			writeErr(w, nil, err)
 			return
 		}
-		err = json.NewEncoder(w).Encode(projects)
+		err = writeOK(w, http.StatusOK, projects)
 		if err != nil {
-			RenderError(w, err)
+			writeErr(w, nil, err)
 			return
 		}
 	}
@@ -88,12 +86,12 @@ func GetProject(projectStore project.ProjectStore) http.HandlerFunc {
 		projectId := chi.URLParam(r, "projectId")
 		p, err := projectStore.Get(r.Context(), projectId)
 		if err != nil {
-			RenderError(w, err)
+			writeErr(w, nil, err)
 			return
 		}
-		err = json.NewEncoder(w).Encode(p)
+		err = writeOK(w, http.StatusOK, p)
 		if err != nil {
-			RenderError(w, err)
+			writeErr(w, nil, err)
 			return
 		}
 	}
@@ -105,7 +103,7 @@ func DeleteProject(projectStore project.ProjectStore, provisioner provisioner.Pr
 		//accountId := chi.URLParam(r, "accountId")
 		err := projectStore.Delete(r.Context(), projectId)
 		if err != nil {
-			RenderError(w, err)
+			writeErr(w, nil, err)
 			return
 		}
 		err = provisioner.DeprovisionProject(r.Context(), &project.Project{ID: projectId})
@@ -113,9 +111,9 @@ func DeleteProject(projectStore project.ProjectStore, provisioner provisioner.Pr
 			log.Warn().Str("id", projectId).Err(err).Msg("could not deprovision project")
 		}
 		stats.ProjectDeleted.Inc()
-		err = json.NewEncoder(w).Encode(&struct{ id string }{id: projectId})
+		err = writeOK(w, http.StatusOK, &struct{ id string }{id: projectId})
 		if err != nil {
-			RenderError(w, err)
+			writeErr(w, nil, err)
 			return
 		}
 	}

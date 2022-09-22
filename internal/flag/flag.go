@@ -51,8 +51,10 @@ func Validate(f Flag) error {
 			return ErrInvalidData{errors.New("invalid value for number flag")}
 		}
 	case STRING:
+	case "":
+		return ErrInvalidData{errors.New("flag type must not empty")}
 	default:
-		return errors.New("invalid flag type")
+		return ErrInvalidData{errors.New("invalid flag type")}
 	}
 	return nil
 }

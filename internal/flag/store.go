@@ -22,7 +22,7 @@ func NewPostgresStore(database *db.Database) (*Store, error) {
 }
 
 func (store *Store) List(ctx context.Context, projectId string, limit, offset int64) ([]*Flag, error) {
-	rows, err := store.db.Query(ctx, `SELECT id, flag_key, flag_type, flag_value, project_id, account_id FROM flag WHERE project_id = $1 OFFSET $2 LIMIT $3;`, projectId, offset, limit)
+	rows, err := store.db.Query(ctx, `SELECT id, flag_key, flag_type, flag_value, project_id, account_id, created_on, modified_on FROM flag WHERE project_id = $1 OFFSET $2 LIMIT $3;`, projectId, offset, limit)
 	err = db.PgError(err)
 	if err != nil {
 		switch err {
@@ -38,7 +38,7 @@ func (store *Store) List(ctx context.Context, projectId string, limit, offset in
 	fs := make([]*Flag, 0)
 	for rows.Next() {
 		f := &Flag{}
-		err = rows.Scan(&f.ID, &f.Key, &f.Type, &f.Value, &f.ProjectID, &f.AccountID)
+		err = rows.Scan(&f.ID, &f.Key, &f.Type, &f.Value, &f.ProjectID, &f.AccountID, &f.CreatedOn, &f.ModifiedOn)
 		if err != nil {
 			return nil, ErrUnknown{err}
 		}

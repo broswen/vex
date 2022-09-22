@@ -53,14 +53,6 @@ func translateError(err error) *APIError {
 	}
 }
 
-func RenderError(rw http.ResponseWriter, err error) error {
-	apiError, ok := err.(*APIError)
-	if !ok {
-		apiError = translateError(err)
-	}
-	return renderError(rw, apiError)
-}
-
 func (e *APIError) WithError(err error) *APIError {
 	temp := &APIError{
 		Status: e.Status,
