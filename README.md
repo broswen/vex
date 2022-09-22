@@ -24,6 +24,59 @@ Accounts can contain multiple projects which consist of a set of configuration f
 }
 ```
 
+## Tokens
+A token is used to manage account objects (read_only = false) or can be set to read only for just reading the project flags
+from the CDN (read_only = true).
+
+`curl -X POST -H 'Authorization Bearer <token here>` /accounts/{accountId}/tokens?readOnly=true`
+```json
+{
+    "data": {
+        "id": "8eafc880-9493-4d00-b9e7-389e9ce989fd",
+        "accountId": "cb6049d9-7720-4442-89be-f9500c72a73b",
+        "token": "d4b7bbe8-ef56-4ef1-8270-b87986989285",  <--- only shown once
+        "read_only": true,
+        "created_on": "2022-09-22T03:26:25.841193Z",
+        "modified_on": "2022-09-22T03:26:25.841193Z"
+    },
+    "success": true,
+    "errors": []
+}
+```
+`curl -X GET -H 'Authorization: Bearer <token here>` /accounts/{acountId}/tokens`
+```json
+{
+    "data": [
+        {
+            "id": "8eafc880-9493-4d00-b9e7-389e9ce989fd",
+            "accountId": "cb6049d9-7720-4442-89be-f9500c72a73b",
+            "read_only": true,
+            "created_on": "2022-09-22T03:26:25.841193Z",
+            "modified_on": "2022-09-22T03:26:25.841193Z"
+        }
+    ],
+    "success": true,
+    "errors": []
+}
+```
+
+Reroll an existing token to get a new value without creating a new token.
+`curl -X PUT -H 'Authorization: Bearer <token here>' /accounts/{accountId/tokens/{tokenId}`
+```json
+{
+    "data": {
+        "id": "8eafc880-9493-4d00-b9e7-389e9ce989fd",
+        "accountId": "cb6049d9-7720-4442-89be-f9500c72a73b",
+        "token": "da3a954d-a4b9-4bd6-a32f-54179d00f29c",   <--- rerolled token value
+        "read_only": true,
+        "created_on": "2022-09-22T03:26:25.841193Z",
+        "modified_on": "2022-09-22T03:26:25.841193Z"
+    },
+    "success": true,
+    "errors": []
+}
+```
+
 ## Projects
 
 A project is a set of configuration flags.

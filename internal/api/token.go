@@ -1,8 +1,6 @@
 package api
 
 import (
-	"encoding/json"
-	"github.com/broswen/vex/internal/db"
 	"github.com/broswen/vex/internal/provisioner"
 	"github.com/broswen/vex/internal/stats"
 	"github.com/broswen/vex/internal/token"
@@ -13,16 +11,20 @@ import (
 
 func ListTokens(tokenStore token.TokenStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		accountId := chi.URLParam(r, "accountId")
+		accountId, err := accountId(r)
+		if err != nil {
+			writeErr(w, nil, err)
+			return
+		}
 		defer r.Body.Close()
 		tokens, err := tokenStore.List(r.Context(), accountId, 100, 0)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			writeErr(w, nil, err)
 			return
 		}
-		err = json.NewEncoder(w).Encode(tokens)
+		err = writeOK(w, http.StatusOK, tokens)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			writeErr(w, nil, err)
 			return
 		}
 	}
@@ -30,7 +32,11 @@ func ListTokens(tokenStore token.TokenStore) http.HandlerFunc {
 
 func GenerateToken(tokenStore token.TokenStore, provisioner provisioner.Provisioner) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		accountId := chi.URLParam(r, "accountId")
+		accountId, err := accountId(r)
+		if err != nil {
+			writeErr(w, nil, err)
+			return
+		}
 		readOnly := r.URL.Query().Get("readOnly")
 		defer r.Body.Close()
 		t, err := tokenStore.Generate(r.Context(), accountId, readOnly == "true")
@@ -44,9 +50,9 @@ func GenerateToken(tokenStore token.TokenStore, provisioner provisioner.Provisio
 		if err != nil {
 			log.Warn().Str("id", t.ID).Err(err).Msg("could not provision token")
 		}
-		err = json.NewEncoder(w).Encode(t)
+		err = writeOK(w, http.StatusOK, t)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			writeErr(w, nil, err)
 			return
 		}
 	}
@@ -59,22 +65,15 @@ func RerollToken(tokenStore token.TokenStore, provisioner provisioner.Provisione
 		defer r.Body.Close()
 		t, err := tokenStore.Get(r.Context(), tokenId)
 		if err != nil {
-			if err == db.ErrNotFound {
-				http.Error(w, err.Error(), http.StatusNotFound)
-			} else {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-			}
+			writeErr(w, nil, err)
 			return
 		}
 		oldToken := t.Token
 
 		err = tokenStore.Reroll(r.Context(), t)
 		if err != nil {
-			if err == db.ErrNotFound {
-				http.Error(w, err.Error(), http.StatusNotFound)
-			} else {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-			}
+			log.Error().Err(err).Msg("")
+			writeErr(w, nil, err)
 			return
 		}
 		stats.TokenRolled.Inc()
@@ -90,9 +89,9 @@ func RerollToken(tokenStore token.TokenStore, provisioner provisioner.Provisione
 			log.Warn().Str("id", t.ID).Err(err).Msg("could not deprovision old token")
 		}
 
-		err = json.NewEncoder(w).Encode(t)
+		err = writeOK(w, http.StatusOK, t)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			writeErr(w, nil, err)
 			return
 		}
 	}
@@ -103,21 +102,13 @@ func DeleteToken(tokenStore token.TokenStore, provisioner provisioner.Provisione
 		tokenId := chi.URLParam(r, "tokenId")
 		t, err := tokenStore.Get(r.Context(), tokenId)
 		if err != nil {
-			if err == db.ErrNotFound {
-				http.Error(w, err.Error(), http.StatusNotFound)
-			} else {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-			}
+			writeErr(w, nil, err)
 			return
 		}
 
 		err = tokenStore.Delete(r.Context(), tokenId)
 		if err != nil {
-			if err == db.ErrNotFound {
-				http.Error(w, err.Error(), http.StatusNotFound)
-			} else {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-			}
+			writeErr(w, nil, err)
 			return
 		}
 		stats.TokenDeleted.Inc()
@@ -126,9 +117,10 @@ func DeleteToken(tokenStore token.TokenStore, provisioner provisioner.Provisione
 		if err != nil {
 			log.Warn().Str("id", t.ID).Err(err).Msg("could not deprovision token")
 		}
-		err = json.NewEncoder(w).Encode(&struct{ id string }{id: tokenId})
+
+		err = writeOK(w, http.StatusOK, t)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			writeErr(w, nil, err)
 			return
 		}
 	}
