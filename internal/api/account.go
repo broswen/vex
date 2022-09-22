@@ -2,7 +2,6 @@ package api
 
 import (
 	"github.com/broswen/vex/internal/account"
-	"github.com/go-chi/chi/v5"
 	"net/http"
 )
 
@@ -32,9 +31,13 @@ func CreateAccount(accountStore account.AccountStore) http.HandlerFunc {
 
 func UpdateAccount(accountStore account.AccountStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		accountId := chi.URLParam(r, "accountId")
+		accountId, err := accountId(r)
+		if err != nil {
+			writeErr(w, nil, err)
+			return
+		}
 		p := &account.Account{}
-		err := readJSON(w, r, p)
+		err = readJSON(w, r, p)
 		if err != nil {
 			writeErr(w, nil, ErrBadRequest.WithError(err))
 			return
@@ -60,7 +63,11 @@ func UpdateAccount(accountStore account.AccountStore) http.HandlerFunc {
 
 func GetAccount(accountStore account.AccountStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		accountId := chi.URLParam(r, "accountId")
+		accountId, err := accountId(r)
+		if err != nil {
+			writeErr(w, nil, err)
+			return
+		}
 		p, err := accountStore.Get(r.Context(), accountId)
 		if err != nil {
 			writeErr(w, nil, err)
@@ -76,8 +83,12 @@ func GetAccount(accountStore account.AccountStore) http.HandlerFunc {
 
 func DeleteAccount(accountStore account.AccountStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		accountId := chi.URLParam(r, "accountId")
-		err := accountStore.Delete(r.Context(), accountId)
+		accountId, err := accountId(r)
+		if err != nil {
+			writeErr(w, nil, err)
+			return
+		}
+		err = accountStore.Delete(r.Context(), accountId)
 		if err != nil {
 			writeErr(w, nil, err)
 			return

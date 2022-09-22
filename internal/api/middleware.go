@@ -2,7 +2,6 @@ package api
 
 import (
 	"github.com/broswen/vex/internal/token"
-	"github.com/go-chi/chi/v5"
 	"github.com/rs/zerolog/log"
 	"net/http"
 	"strings"
@@ -11,7 +10,11 @@ import (
 func AccountAuthorizer(next http.Handler, tokenStore token.TokenStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		authHeader := r.Header.Get("Authorization")
-		accountId := chi.URLParam(r, "accountId")
+		accountId, err := accountId(r)
+		if err != nil {
+			writeErr(w, nil, err)
+			return
+		}
 		if authHeader == "" {
 			writeErr(w, nil, ErrUnauthorized)
 			return

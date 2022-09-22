@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/go-chi/chi/v5"
 	"io"
 	"net/http"
 )
@@ -12,6 +13,30 @@ type V1Response struct {
 	Data    any      `json:"data"`
 	Success bool     `json:"success"`
 	Errors  []string `json:"errors"`
+}
+
+func accountId(r *http.Request) (string, error) {
+	accountId := chi.URLParam(r, "accountId")
+	if len(accountId) != 36 {
+		return accountId, ErrBadRequest.WithError(errors.New("invalid account id"))
+	}
+	return accountId, nil
+}
+
+func projectId(r *http.Request) (string, error) {
+	projectId := chi.URLParam(r, "projectId")
+	if len(projectId) != 36 {
+		return projectId, ErrBadRequest.WithError(errors.New("invalid project id"))
+	}
+	return projectId, nil
+}
+
+func flagId(r *http.Request) (string, error) {
+	flagId := chi.URLParam(r, "flagId")
+	if len(flagId) != 36 {
+		return flagId, ErrBadRequest.WithError(errors.New("invalid flag id"))
+	}
+	return flagId, nil
 }
 
 func readJSON(w http.ResponseWriter, r *http.Request, dst any) error {

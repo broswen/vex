@@ -58,7 +58,11 @@ func CreateFlag(flagStore flag.FlagStore, projectStore project.ProjectStore, pro
 
 func UpdateFlag(flagStore flag.FlagStore, projectStore project.ProjectStore, provisioner provisioner.Provisioner) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		flagId := chi.URLParam(r, "flagId")
+		flagId, err := flagId(r)
+		if err != nil {
+			writeErr(w, nil, err)
+			return
+		}
 		projectId := chi.URLParam(r, "projectId")
 		p, err := projectStore.Get(r.Context(), projectId)
 		if err != nil {
@@ -127,7 +131,11 @@ func ListFlags(flagStore flag.FlagStore, projectStore project.ProjectStore) http
 func GetFlag(flagStore flag.FlagStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		//projectId := chi.URLParam(r, "projectId")
-		flagId := chi.URLParam(r, "flagId")
+		flagId, err := flagId(r)
+		if err != nil {
+			writeErr(w, nil, err)
+			return
+		}
 		f, err := flagStore.Get(r.Context(), flagId)
 		if err != nil {
 			writeErr(w, nil, err)
@@ -149,7 +157,11 @@ func DeleteFlag(flagStore flag.FlagStore, projectStore project.ProjectStore, pro
 			writeErr(w, nil, err)
 			return
 		}
-		flagId := chi.URLParam(r, "flagId")
+		flagId, err := flagId(r)
+		if err != nil {
+			writeErr(w, nil, err)
+			return
+		}
 		err = flagStore.Delete(r.Context(), flagId)
 		if err != nil {
 			writeErr(w, nil, err)

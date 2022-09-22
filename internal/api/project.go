@@ -38,9 +38,13 @@ func CreateProject(projectStore project.ProjectStore) http.HandlerFunc {
 func UpdateProject(projectStore project.ProjectStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		accountId := chi.URLParam(r, "accountId")
-		projectId := chi.URLParam(r, "projectId")
+		projectId, err := projectId(r)
+		if err != nil {
+			writeErr(w, nil, err)
+			return
+		}
 		p := &project.Project{}
-		err := readJSON(w, r, p)
+		err = readJSON(w, r, p)
 		if err != nil {
 			writeErr(w, nil, ErrBadRequest.WithError(err))
 			return
@@ -83,7 +87,11 @@ func ListProjects(projectStore project.ProjectStore) http.HandlerFunc {
 func GetProject(projectStore project.ProjectStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		//accountId := chi.URLParam(r, "accountId")
-		projectId := chi.URLParam(r, "projectId")
+		projectId, err := projectId(r)
+		if err != nil {
+			writeErr(w, nil, err)
+			return
+		}
 		p, err := projectStore.Get(r.Context(), projectId)
 		if err != nil {
 			writeErr(w, nil, err)
@@ -99,9 +107,13 @@ func GetProject(projectStore project.ProjectStore) http.HandlerFunc {
 
 func DeleteProject(projectStore project.ProjectStore, provisioner provisioner.Provisioner) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		projectId := chi.URLParam(r, "projectId")
+		projectId, err := projectId(r)
+		if err != nil {
+			writeErr(w, nil, err)
+			return
+		}
 		//accountId := chi.URLParam(r, "accountId")
-		err := projectStore.Delete(r.Context(), projectId)
+		err = projectStore.Delete(r.Context(), projectId)
 		if err != nil {
 			writeErr(w, nil, err)
 			return
