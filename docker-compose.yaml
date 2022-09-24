@@ -1,7 +1,6 @@
 version: "3.9"
 services:
   config:
-    container_name: config
     build:
       context: .
       dockerfile: Dockerfile
@@ -22,10 +21,12 @@ services:
       - "8081:8081"
       - "8082:8082"
   provisioner:
-    container_name: provisioner
     build:
       context: .
       dockerfile: Dockerfile.provisioner
+    deploy:
+      mode: replicated
+      replicas: 2
     depends_on:
       - broker
       - postgres

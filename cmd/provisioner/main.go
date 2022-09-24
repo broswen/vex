@@ -142,8 +142,10 @@ func main() {
 				log.Panic().Err(err)
 			}
 			if ctx.Err() != nil {
+				log.Error().Err(err).Msg("")
 				return
 			}
+			consumer.ready = make(chan bool)
 		}
 	}()
 
@@ -173,8 +175,8 @@ func main() {
 
 func NewConsumer(skip bool) *Consumer {
 	return &Consumer{
-		skip:     skip,
 		ready:    make(chan bool),
+		skip:     skip,
 		handlers: make(map[string]MessageHandler),
 	}
 }
@@ -182,9 +184,9 @@ func NewConsumer(skip bool) *Consumer {
 type MessageHandler func(message *sarama.ConsumerMessage) error
 
 type Consumer struct {
+	ready chan bool
 	// whether in dev mode and shouldn't actually provision anything
 	skip     bool
-	ready    chan bool
 	handlers map[string]MessageHandler
 }
 
@@ -217,7 +219,10 @@ func (c *Consumer) Cleanup(sarama.ConsumerGroupSession) error {
 func (c *Consumer) ConsumeClaim(session sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
 	for {
 		select {
-		case message := <-claim.Messages():
+		case message, ok := <-claim.Messages():
+			if !ok {
+				return nil
+			}
 			err := c.Handle(message)
 			if err != nil {
 				log.Debug().Err(err)

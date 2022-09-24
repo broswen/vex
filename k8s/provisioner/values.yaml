@@ -3,7 +3,7 @@
 # Declare variables to be passed into your templates.
 
 # need to refactor provisioner to handle concurrent consumers?
-replicaCount: 1
+replicaCount: 2
 namespace: vex
 
 image:
