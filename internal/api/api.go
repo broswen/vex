@@ -11,6 +11,20 @@ import (
 	"net/http"
 )
 
+func AdminRouter(accountStore account.AccountStore, tokenStore token.TokenStore, provisioner provisioner.Provisioner) http.Handler {
+	r := chi.NewRouter()
+	r.Use(middleware.StripSlashes)
+	r.Use(middleware.Heartbeat("/healthz"))
+	r.Use(middleware.Logger)
+	r.Use(middleware.RealIP)
+	r.Use(middleware.SetHeader("Content-Type", "application/json"))
+
+	r.Get("/admin/accounts", ListAccounts(accountStore))
+	r.Post("/admin/accounts", CreateAccount(accountStore))
+
+	r.Post("/admin/accounts/{accountId}/tokens", GenerateToken(tokenStore, provisioner))
+	return r
+}
 func Router(projectStore project.ProjectStore, flagStore flag.FlagStore, accountStore account.AccountStore, tokenStore token.TokenStore, provisioner provisioner.Provisioner) http.Handler {
 	r := chi.NewRouter()
 	r.Use(middleware.StripSlashes)

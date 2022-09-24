@@ -14,8 +14,14 @@ export async function handleRequest(request: Request, env: Env) {
     return new Response('missing token', {status: 401})
   }
 
+  //convert token value into bytes
+  const tokenBytes = new TextEncoder().encode(token)
+  //get SHA256 digest of token bytes
+  const tokenHash = await crypto.subtle.digest({name: 'SHA-256'}, tokenBytes)
+  //convert bytes into uint8 array, convert each byte to hex representation, join into hex string
+  const hashedToken = Array.from(new Uint8Array(tokenHash)).map(b => b.toString(16).padStart(2, '0')).join('')
   //reject if token not in kv
-  const tokenAccount = await getTokenAccount(token, env)
+  const tokenAccount = await getTokenAccount(hashedToken, env)
   if (!tokenAccount) {
     return new Response('invalid token', {status: 401})
   }

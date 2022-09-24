@@ -192,7 +192,7 @@ func (c *Consumer) Handle(message *sarama.ConsumerMessage) error {
 	for k, f := range c.handlers {
 		if message.Topic == k {
 			if c.skip {
-				log.Debug().Str("topic", message.Topic).Str("value", string(message.Value)).Msg("skipping message")
+				log.Debug().Str("topic", message.Topic).Str("value", string(message.Value)).Msg("provisioning skipped")
 				return nil
 			}
 			return f(message)

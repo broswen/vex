@@ -2,6 +2,7 @@ package provisioner
 
 import (
 	"context"
+	"encoding/hex"
 	"github.com/broswen/vex/internal/flag"
 	"github.com/broswen/vex/internal/project"
 	"github.com/broswen/vex/internal/token"
@@ -78,7 +79,7 @@ func (p *CloudflareProvisioner) ProvisionToken(ctx context.Context, t *token.Tok
 	}
 	resp, err := p.api.WriteWorkersKVBulk(ctx, p.tokenKVNamespaceID, cloudflare.WorkersKVBulkWriteRequest{
 		{
-			Key:   tok.Token,
+			Key:   hex.EncodeToString(tok.TokenHash),
 			Value: tok.AccountID,
 		},
 	})

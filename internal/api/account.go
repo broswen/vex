@@ -61,6 +61,21 @@ func UpdateAccount(accountStore account.AccountStore) http.HandlerFunc {
 	}
 }
 
+func ListAccounts(accountStore account.AccountStore) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		p, err := accountStore.List(r.Context())
+		if err != nil {
+			writeErr(w, nil, err)
+			return
+		}
+		err = writeOK(w, http.StatusOK, p)
+		if err != nil {
+			writeErr(w, nil, err)
+			return
+		}
+	}
+}
+
 func GetAccount(accountStore account.AccountStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		accountId, err := accountId(r)

@@ -25,7 +25,7 @@ func AccountAuthorizer(next http.Handler, tokenStore token.TokenStore) http.Hand
 			return
 		}
 		token := parts[1]
-		log.Debug().Str("token", token).Msg("found authorization token")
+		log.Debug().Msg("found authorization token")
 		t, err := tokenStore.GetByToken(r.Context(), token)
 		if err != nil {
 			log.Debug().Err(err).Msg("couldn't get by token")

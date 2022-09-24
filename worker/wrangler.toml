@@ -1,6 +1,5 @@
 name = "vex-worker"
 
-account_id = ""
 workers_dev = true
 
 compatibility_date = "2022-06-20"
@@ -9,8 +8,8 @@ compatibility_flags = []
 main = "src/index.ts"
 
 kv_namespaces = [
-    { binding = "FLAG", id = "8e5b0e19f64f484ebb5031e4c0525fe6", preview_id = "" },
-    { binding = "TOKEN", id = "f8b2a481725b4d4197c4a243b35a820f", preview_id = "" }
+    { binding = "FLAG", id = "62be3e219ec343e881e8383162d21601", preview_id = "b4381d8894c14f58b211ddff52d760e4" },
+    { binding = "TOKEN", id = "b98a38f9e1204262a9dd7aaea37bcc51", preview_id = "ae6c718cea5f4454a5fa88c4a128963b" }
 ]
 
 [vars]

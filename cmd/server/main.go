@@ -14,6 +14,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"golang.org/x/sync/errgroup"
 	"net/http"
 	"os"
 )
@@ -29,6 +30,11 @@ func main() {
 	apiPort := os.Getenv("API_PORT")
 	if apiPort == "" {
 		apiPort = "8080"
+	}
+	// port for admin api
+	adminPort := os.Getenv("ADMIN_PORT")
+	if apiPort == "" {
+		apiPort = "8082"
 	}
 	// port for prometheus
 	metricsPort := os.Getenv("METRICS_PORT")
@@ -99,12 +105,23 @@ func main() {
 		}
 	}()
 
+	eg := errgroup.Group{}
+
+	adminRouter := api.AdminRouter(accountStore, tokenStore, provisioner)
+	// start admin api listener on api port
+	eg.Go(func() error {
+		log.Debug().Msgf("admin api listening on :%s", adminPort)
+		return http.ListenAndServe(fmt.Sprintf(":%s", adminPort), adminRouter)
+	})
+
 	// start api listener on api port
-	r := api.Router(projectStore, flagStore, accountStore, tokenStore, provisioner)
-	if err := http.ListenAndServe(fmt.Sprintf(":%s", apiPort), r); err != nil {
-		log.Fatal().Err(err)
+	publicRouter := api.Router(projectStore, flagStore, accountStore, tokenStore, provisioner)
+	eg.Go(func() error {
+		log.Debug().Msgf("public api listening on :%s", apiPort)
+		return http.ListenAndServe(fmt.Sprintf(":%s", apiPort), publicRouter)
+	})
+
+	if err := eg.Wait(); err != nil {
+		log.Fatal().Err(err).Msg("")
 	}
-
-	//	listen for os signals?
-
 }

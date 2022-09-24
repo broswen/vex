@@ -12,7 +12,7 @@ create table account (
 
 create table token (
     id uuid default uuid_generate_v4() primary key,
-    token uuid default uuid_generate_v4(),
+    token_hash bytea not null,
     account_id uuid references account(id) on delete cascade,
     read_only boolean default true,
     created_on timestamptz not null default now(),
