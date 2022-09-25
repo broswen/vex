@@ -17,6 +17,8 @@ import (
 	"golang.org/x/sync/errgroup"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 )
 
 func main() {
@@ -33,8 +35,8 @@ func main() {
 	}
 	// port for admin api
 	adminPort := os.Getenv("ADMIN_PORT")
-	if apiPort == "" {
-		apiPort = "8082"
+	if adminPort == "" {
+		adminPort = "8082"
 	}
 	// port for prometheus
 	metricsPort := os.Getenv("METRICS_PORT")
@@ -108,17 +110,55 @@ func main() {
 	eg := errgroup.Group{}
 
 	adminRouter := api.AdminRouter(accountStore, tokenStore, provisioner)
+	adminServer := http.Server{
+		Addr:    fmt.Sprintf(":%s", adminPort),
+		Handler: adminRouter,
+	}
 	// start admin api listener on api port
 	eg.Go(func() error {
 		log.Debug().Msgf("admin api listening on :%s", adminPort)
-		return http.ListenAndServe(fmt.Sprintf(":%s", adminPort), adminRouter)
+		if err := adminServer.ListenAndServe(); err != nil {
+			if err != http.ErrServerClosed {
+				return err
+			}
+		}
+		return nil
 	})
 
-	// start api listener on api port
 	publicRouter := api.Router(projectStore, flagStore, accountStore, tokenStore, provisioner)
+	publicServer := http.Server{
+		Addr:    fmt.Sprintf(":%s", apiPort),
+		Handler: publicRouter,
+	}
+	// start public api listener on api port
 	eg.Go(func() error {
 		log.Debug().Msgf("public api listening on :%s", apiPort)
-		return http.ListenAndServe(fmt.Sprintf(":%s", apiPort), publicRouter)
+		if err := publicServer.ListenAndServe(); err != nil {
+			if err != http.ErrServerClosed {
+				return err
+			}
+		}
+		return nil
+	})
+
+	eg.Go(func() error {
+		sigint := make(chan os.Signal, 1)
+		signal.Notify(sigint, syscall.SIGINT, syscall.SIGTERM)
+		sig := <-sigint
+		log.Debug().Str("signal", sig.String()).Msg("received signal")
+
+		var err error
+		log.Debug().Msg("shutting down admin server")
+		if er := adminServer.Shutdown(context.Background()); er != nil {
+			log.Error().Err(er).Msg("error shutting down admin server")
+			err = er
+		}
+		log.Debug().Msg("shutting down public server")
+		if er := publicServer.Shutdown(context.Background()); er != nil {
+			log.Error().Err(er).Msg("error shutting down public server")
+			err = er
+		}
+		return err
 	})
 
 	if err := eg.Wait(); err != nil {
