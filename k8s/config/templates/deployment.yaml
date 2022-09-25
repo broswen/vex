@@ -41,6 +41,9 @@ spec:
             - name: http
               containerPort: 8080
               protocol: TCP
+            - name: adminhttp
+              containerPort: 8082
+              protocol: TCP
           livenessProbe:
             httpGet:
               path: /healthz

@@ -71,6 +71,11 @@ func main() {
 		brokers = "kafka-clusterip.kafka.svc.cluster.local:9092"
 	}
 
+	//Cloudflare Access Application policy AUD
+	policyAUD := os.Getenv("POLICY_AUD")
+	//Cloudflare Access team domain <team>.cloudflareaccess.com
+	teamDomain := os.Getenv("TEAM_DOMAIN")
+
 	//	initialize database connection
 	database, err := db.InitDB(context.Background(), dsn)
 	if err != nil {
@@ -109,7 +114,7 @@ func main() {
 
 	eg := errgroup.Group{}
 
-	adminRouter := api.AdminRouter(accountStore, tokenStore, provisioner)
+	adminRouter := api.AdminRouter(accountStore, tokenStore, provisioner, teamDomain, policyAUD)
 	adminServer := http.Server{
 		Addr:    fmt.Sprintf(":%s", adminPort),
 		Handler: adminRouter,

@@ -26,6 +26,8 @@ configmap:
     TOKEN_PROVISION_TOPIC: "vex-provision-token"
     TOKEN_DEPROVISION_TOPIC: "vex-deprovision-token"
     BROKERS: "kafka-clusterip.kafka.svc.cluster.local:9092"
+    TEAM_DOMAIN: <cloudflare access team domain>
+    POLICY_AUD: <cloudflare access app policy aud>
 
 imagePullSecrets: []
 nameOverride: ""
@@ -60,6 +62,10 @@ service:
   type: ClusterIP
   port: 8080
 
+adminService:
+  type: ClusterIP
+  port: 8082
+
 ingress:
   enabled: true
   className: ""
@@ -71,6 +77,12 @@ ingress:
       paths:
         - path: /
           pathType: Prefix
+          port: 8080
+    - host: vex-admin.broswen.com
+      paths:
+        - path: /
+          pathType: Prefix
+          port: 8082
   tls: []
   #  - secretName: chart-example-tls
   #    hosts:

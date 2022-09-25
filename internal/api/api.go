@@ -11,13 +11,14 @@ import (
 	"net/http"
 )
 
-func AdminRouter(accountStore account.AccountStore, tokenStore token.TokenStore, provisioner provisioner.Provisioner) http.Handler {
+func AdminRouter(accountStore account.AccountStore, tokenStore token.TokenStore, provisioner provisioner.Provisioner, teamDomain, policyAUD string) http.Handler {
 	r := chi.NewRouter()
 	r.Use(middleware.StripSlashes)
 	r.Use(middleware.Heartbeat("/healthz"))
 	r.Use(middleware.Logger)
 	r.Use(middleware.RealIP)
 	r.Use(middleware.SetHeader("Content-Type", "application/json"))
+	r.Use(CloudflareAccessVerifier(teamDomain, policyAUD))
 
 	r.Get("/admin/accounts", ListAccounts(accountStore))
 	r.Post("/admin/accounts", CreateAccount(accountStore))

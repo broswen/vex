@@ -33,7 +33,9 @@ data:
   DEPROVISION_TOPIC: vex-deprovision
   METRICS_PATH: /metrics
   METRICS_PORT: "8081"
+  POLICY_AUD: <cloudflare access app policy aud>
   PROVISION_TOPIC: vex-provision
+  TEAM_DOMAIN: <cloudflare access team domain>
   TOKEN_DEPROVISION_TOPIC: vex-deprovision-token
   TOKEN_PROVISION_TOPIC: vex-provision-token
 ---
@@ -56,6 +58,10 @@ spec:
       targetPort: http
       protocol: TCP
       name: http
+    - port: 8082
+      targetPort: adminhttp
+      protocol: TCP
+      name: adminhttp
   selector:
     app.kubernetes.io/name: config
     app.kubernetes.io/instance: config
@@ -106,6 +112,9 @@ spec:
             - name: http
               containerPort: 8080
               protocol: TCP
+            - name: adminhttp
+              containerPort: 8082
+              protocol: TCP
           livenessProbe:
             httpGet:
               path: /healthz
@@ -146,3 +155,13 @@ spec:
                 name: config
                 port:
                   number: 8080
+    - host: "vex-admin.broswen.com"
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: config
+                port:
+                  number: 8082
