@@ -11,7 +11,15 @@ import (
 	"net/http"
 )
 
-func AdminRouter(accountStore account.AccountStore, tokenStore token.TokenStore, provisioner provisioner.Provisioner, teamDomain, policyAUD string) http.Handler {
+type API struct {
+	Account     account.AccountStore
+	Project     project.ProjectStore
+	Flag        flag.FlagStore
+	Token       token.TokenStore
+	Provisioner provisioner.Provisioner
+}
+
+func (api *API) AdminRouter(teamDomain, policyAUD string) http.Handler {
 	r := chi.NewRouter()
 	r.Use(middleware.StripSlashes)
 	r.Use(middleware.Heartbeat("/healthz"))
@@ -20,13 +28,13 @@ func AdminRouter(accountStore account.AccountStore, tokenStore token.TokenStore,
 	r.Use(middleware.SetHeader("Content-Type", "application/json"))
 	r.Use(CloudflareAccessVerifier(teamDomain, policyAUD))
 
-	r.Get("/admin/accounts", ListAccounts(accountStore))
-	r.Post("/admin/accounts", CreateAccount(accountStore))
+	r.Get("/admin/accounts", api.ListAccounts())
+	r.Post("/admin/accounts", api.CreateAccount())
 
-	r.Post("/admin/accounts/{accountId}/tokens", GenerateToken(tokenStore, provisioner))
+	r.Post("/admin/accounts/{accountId}/tokens", api.GenerateToken())
 	return r
 }
-func Router(projectStore project.ProjectStore, flagStore flag.FlagStore, accountStore account.AccountStore, tokenStore token.TokenStore, provisioner provisioner.Provisioner) http.Handler {
+func (api *API) Router() http.Handler {
 	r := chi.NewRouter()
 	r.Use(middleware.StripSlashes)
 	r.Use(middleware.Heartbeat("/healthz"))
@@ -45,25 +53,29 @@ func Router(projectStore project.ProjectStore, flagStore flag.FlagStore, account
 	//disable creating accounts through api for now
 	//r.Post("/accounts", CreateAccount(accountStore))
 	//r.Get("/accounts/", http.NotFound)
-	r.Get("/accounts/{accountId}", AccountAuthorizer(GetAccount(accountStore), tokenStore))
-	r.Put("/accounts/{accountId}", AccountAuthorizer(UpdateAccount(accountStore), tokenStore))
-	r.Delete("/accounts/{accountId}", AccountAuthorizer(DeleteAccount(accountStore), tokenStore))
+	r.Route("/accounts/{accountId}", func(r chi.Router) {
+		r.Use(AccountAuthorizer(api.Token))
+		r.Get("/", api.GetAccount())
+		r.Put("/", api.UpdateAccount())
+		r.Delete("/", api.DeleteAccount())
 
-	r.Get("/accounts/{accountId}/tokens", AccountAuthorizer(ListTokens(tokenStore), tokenStore))
-	r.Post("/accounts/{accountId}/tokens", AccountAuthorizer(GenerateToken(tokenStore, provisioner), tokenStore))
-	r.Put("/accounts/{accountId}/tokens/{tokenId}", AccountAuthorizer(RerollToken(tokenStore, provisioner), tokenStore))
-	r.Delete("/accounts/{accountId}/tokens/{tokenId}", AccountAuthorizer(DeleteToken(tokenStore, provisioner), tokenStore))
+		r.Get("/tokens", api.ListTokens())
+		r.Post("/tokens", api.GenerateToken())
+		r.Put("/tokens/{tokenId}", api.RerollToken())
+		r.Delete("/tokens/{tokenId}", api.DeleteToken())
 
-	r.Post("/accounts/{accountId}/projects", AccountAuthorizer(CreateProject(projectStore), tokenStore))
-	r.Get("/accounts/{accountId}/projects", AccountAuthorizer(ListProjects(projectStore), tokenStore))
-	r.Put("/accounts/{accountId}/projects/{projectId}", AccountAuthorizer(UpdateProject(projectStore), tokenStore))
-	r.Get("/accounts/{accountId}/projects/{projectId}", AccountAuthorizer(GetProject(projectStore), tokenStore))
-	r.Delete("/accounts/{accountId}/projects/{projectId}", AccountAuthorizer(DeleteProject(projectStore, provisioner), tokenStore))
+		r.Post("/projects", api.CreateProject())
+		r.Get("/projects", api.ListProjects())
+		r.Put("/projects/{projectId}", api.UpdateProject())
+		r.Get("/projects/{projectId}", api.GetProject())
+		r.Delete("/projects/{projectId}", api.DeleteProject())
 
-	r.Post("/accounts/{accountId}/projects/{projectId}/flags", AccountAuthorizer(CreateFlag(flagStore, projectStore, provisioner), tokenStore))
-	r.Get("/accounts/{accountId}/projects/{projectId}/flags", AccountAuthorizer(ListFlags(flagStore, projectStore), tokenStore))
-	r.Put("/accounts/{accountId}/projects/{projectId}/flags/{flagId}", AccountAuthorizer(UpdateFlag(flagStore, projectStore, provisioner), tokenStore))
-	r.Get("/accounts/{accountId}/projects/{projectId}/flags/{flagId}", AccountAuthorizer(GetFlag(flagStore), tokenStore))
-	r.Delete("/accounts/{accountId}/projects/{projectId}/flags/{flagId}", AccountAuthorizer(DeleteFlag(flagStore, projectStore, provisioner), tokenStore))
+		r.Post("/projects/{projectId}/flags", api.CreateFlag())
+		r.Get("/projects/{projectId}/flags", api.ListFlags())
+		r.Put("/projects/{projectId}/flags/{flagId}", api.UpdateFlag())
+		r.Get("/projects/{projectId}/flags/{flagId}", api.GetFlag())
+		r.Delete("/projects/{projectId}/flags/{flagId}", api.DeleteFlag())
+	})
+
 	return r
 }

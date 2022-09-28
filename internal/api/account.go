@@ -5,7 +5,7 @@ import (
 	"net/http"
 )
 
-func CreateAccount(accountStore account.AccountStore) http.HandlerFunc {
+func (api *API) CreateAccount() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		p := &account.Account{}
 		err := readJSON(w, r, p)
@@ -14,7 +14,7 @@ func CreateAccount(accountStore account.AccountStore) http.HandlerFunc {
 			return
 		}
 		defer r.Body.Close()
-		err = accountStore.Insert(r.Context(), p)
+		err = api.Account.Insert(r.Context(), p)
 
 		if err != nil {
 			writeErr(w, nil, err)
@@ -29,7 +29,7 @@ func CreateAccount(accountStore account.AccountStore) http.HandlerFunc {
 	}
 }
 
-func UpdateAccount(accountStore account.AccountStore) http.HandlerFunc {
+func (api *API) UpdateAccount() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		accountId, err := accountId(r)
 		if err != nil {
@@ -46,7 +46,7 @@ func UpdateAccount(accountStore account.AccountStore) http.HandlerFunc {
 
 		p.ID = accountId
 
-		err = accountStore.Update(r.Context(), p)
+		err = api.Account.Update(r.Context(), p)
 
 		if err != nil {
 			writeErr(w, nil, err)
@@ -61,9 +61,9 @@ func UpdateAccount(accountStore account.AccountStore) http.HandlerFunc {
 	}
 }
 
-func ListAccounts(accountStore account.AccountStore) http.HandlerFunc {
+func (api *API) ListAccounts() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		p, err := accountStore.List(r.Context())
+		p, err := api.Account.List(r.Context())
 		if err != nil {
 			writeErr(w, nil, err)
 			return
@@ -76,34 +76,34 @@ func ListAccounts(accountStore account.AccountStore) http.HandlerFunc {
 	}
 }
 
-func GetAccount(accountStore account.AccountStore) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		accountId, err := accountId(r)
-		if err != nil {
-			writeErr(w, nil, err)
-			return
-		}
-		p, err := accountStore.Get(r.Context(), accountId)
-		if err != nil {
-			writeErr(w, nil, err)
-			return
-		}
-		err = writeOK(w, http.StatusOK, p)
-		if err != nil {
-			writeErr(w, nil, err)
-			return
-		}
-	}
-}
-
-func DeleteAccount(accountStore account.AccountStore) http.HandlerFunc {
+func (api *API) GetAccount() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		accountId, err := accountId(r)
 		if err != nil {
 			writeErr(w, nil, err)
 			return
 		}
-		err = accountStore.Delete(r.Context(), accountId)
+		p, err := api.Account.Get(r.Context(), accountId)
+		if err != nil {
+			writeErr(w, nil, err)
+			return
+		}
+		err = writeOK(w, http.StatusOK, p)
+		if err != nil {
+			writeErr(w, nil, err)
+			return
+		}
+	}
+}
+
+func (api *API) DeleteAccount() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		accountId, err := accountId(r)
+		if err != nil {
+			writeErr(w, nil, err)
+			return
+		}
+		err = api.Account.Delete(r.Context(), accountId)
 		if err != nil {
 			writeErr(w, nil, err)
 			return

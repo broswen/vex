@@ -26,8 +26,11 @@ func TestCreateAccountHandler(t *testing.T) {
 	rr := httptest.NewRecorder()
 	store := account.NewMockStore()
 	store.On("Insert").Return(nil)
+	app := &API{
+		Account: store,
+	}
 	r := chi.NewRouter()
-	r.Post("/accounts", CreateAccount(store))
+	r.Post("/accounts", app.CreateAccount())
 	r.ServeHTTP(rr, req)
 	assert.Equalf(t, rr.Code, http.StatusOK, "should create new account")
 	store.AssertExpectations(t)
@@ -49,8 +52,12 @@ func TestGetAccountHandler(t *testing.T) {
 	rr := httptest.NewRecorder()
 
 	store.On("Get").Return(nil)
+
+	app := &API{
+		Account: store,
+	}
 	r := chi.NewRouter()
-	r.Get("/accounts/{accountId}", GetAccount(store))
+	r.Get("/accounts/{accountId}", app.GetAccount())
 
 	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("/accounts/%s", a1.ID), nil)
 	assert.Nil(t, err)

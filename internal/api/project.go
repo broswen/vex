@@ -2,14 +2,13 @@ package api
 
 import (
 	"github.com/broswen/vex/internal/project"
-	"github.com/broswen/vex/internal/provisioner"
 	"github.com/broswen/vex/internal/stats"
 	"github.com/go-chi/chi/v5"
 	"github.com/rs/zerolog/log"
 	"net/http"
 )
 
-func CreateProject(projectStore project.ProjectStore) http.HandlerFunc {
+func (api *API) CreateProject() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		accountId := chi.URLParam(r, "accountId")
 		p := &project.Project{}
@@ -20,7 +19,7 @@ func CreateProject(projectStore project.ProjectStore) http.HandlerFunc {
 		}
 		defer r.Body.Close()
 		p.AccountID = accountId
-		err = projectStore.Insert(r.Context(), p)
+		err = api.Project.Insert(r.Context(), p)
 
 		if err != nil {
 			writeErr(w, nil, err)
@@ -35,7 +34,7 @@ func CreateProject(projectStore project.ProjectStore) http.HandlerFunc {
 	}
 }
 
-func UpdateProject(projectStore project.ProjectStore) http.HandlerFunc {
+func (api *API) UpdateProject() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		accountId := chi.URLParam(r, "accountId")
 		projectId, err := projectId(r)
@@ -54,7 +53,7 @@ func UpdateProject(projectStore project.ProjectStore) http.HandlerFunc {
 		p.ID = projectId
 		p.AccountID = accountId
 
-		err = projectStore.Update(r.Context(), p)
+		err = api.Project.Update(r.Context(), p)
 
 		if err != nil {
 			writeErr(w, nil, err)
@@ -68,10 +67,10 @@ func UpdateProject(projectStore project.ProjectStore) http.HandlerFunc {
 	}
 }
 
-func ListProjects(projectStore project.ProjectStore) http.HandlerFunc {
+func (api *API) ListProjects() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		accountId := chi.URLParam(r, "accountId")
-		projects, err := projectStore.List(r.Context(), accountId, 100, 0)
+		projects, err := api.Project.List(r.Context(), accountId, 100, 0)
 		if err != nil {
 			writeErr(w, nil, err)
 			return
@@ -84,7 +83,7 @@ func ListProjects(projectStore project.ProjectStore) http.HandlerFunc {
 	}
 }
 
-func GetProject(projectStore project.ProjectStore) http.HandlerFunc {
+func (api *API) GetProject() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		//accountId := chi.URLParam(r, "accountId")
 		projectId, err := projectId(r)
@@ -92,7 +91,7 @@ func GetProject(projectStore project.ProjectStore) http.HandlerFunc {
 			writeErr(w, nil, err)
 			return
 		}
-		p, err := projectStore.Get(r.Context(), projectId)
+		p, err := api.Project.Get(r.Context(), projectId)
 		if err != nil {
 			writeErr(w, nil, err)
 			return
@@ -105,7 +104,7 @@ func GetProject(projectStore project.ProjectStore) http.HandlerFunc {
 	}
 }
 
-func DeleteProject(projectStore project.ProjectStore, provisioner provisioner.Provisioner) http.HandlerFunc {
+func (api *API) DeleteProject() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		projectId, err := projectId(r)
 		if err != nil {
@@ -113,12 +112,12 @@ func DeleteProject(projectStore project.ProjectStore, provisioner provisioner.Pr
 			return
 		}
 		//accountId := chi.URLParam(r, "accountId")
-		err = projectStore.Delete(r.Context(), projectId)
+		err = api.Project.Delete(r.Context(), projectId)
 		if err != nil {
 			writeErr(w, nil, err)
 			return
 		}
-		err = provisioner.DeprovisionProject(r.Context(), &project.Project{ID: projectId})
+		err = api.Provisioner.DeprovisionProject(r.Context(), &project.Project{ID: projectId})
 		if err != nil {
 			log.Warn().Str("id", projectId).Err(err).Msg("could not deprovision project")
 		}

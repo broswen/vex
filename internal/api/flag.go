@@ -2,18 +2,16 @@ package api
 
 import (
 	"github.com/broswen/vex/internal/flag"
-	"github.com/broswen/vex/internal/project"
-	"github.com/broswen/vex/internal/provisioner"
 	"github.com/broswen/vex/internal/stats"
 	"github.com/go-chi/chi/v5"
 	"github.com/rs/zerolog/log"
 	"net/http"
 )
 
-func CreateFlag(flagStore flag.FlagStore, projectStore project.ProjectStore, provisioner provisioner.Provisioner) http.HandlerFunc {
+func (api *API) CreateFlag() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		projectId := chi.URLParam(r, "projectId")
-		p, err := projectStore.Get(r.Context(), projectId)
+		p, err := api.Project.Get(r.Context(), projectId)
 		if err != nil {
 			writeErr(w, nil, err)
 			return
@@ -34,14 +32,14 @@ func CreateFlag(flagStore flag.FlagStore, projectStore project.ProjectStore, pro
 			return
 		}
 
-		err = flagStore.Insert(r.Context(), f)
+		err = api.Flag.Insert(r.Context(), f)
 
 		if err != nil {
 			writeErr(w, nil, err)
 			return
 		}
 
-		err = provisioner.ProvisionProject(r.Context(), p)
+		err = api.Provisioner.ProvisionProject(r.Context(), p)
 		if err != nil {
 			log.Warn().Str("id", projectId).Err(err).Msg("could not provision project")
 		}
@@ -56,7 +54,7 @@ func CreateFlag(flagStore flag.FlagStore, projectStore project.ProjectStore, pro
 	}
 }
 
-func UpdateFlag(flagStore flag.FlagStore, projectStore project.ProjectStore, provisioner provisioner.Provisioner) http.HandlerFunc {
+func (api *API) UpdateFlag() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		flagId, err := flagId(r)
 		if err != nil {
@@ -64,7 +62,7 @@ func UpdateFlag(flagStore flag.FlagStore, projectStore project.ProjectStore, pro
 			return
 		}
 		projectId := chi.URLParam(r, "projectId")
-		p, err := projectStore.Get(r.Context(), projectId)
+		p, err := api.Project.Get(r.Context(), projectId)
 		if err != nil {
 			writeErr(w, nil, err)
 			return
@@ -87,12 +85,12 @@ func UpdateFlag(flagStore flag.FlagStore, projectStore project.ProjectStore, pro
 			return
 		}
 
-		err = flagStore.Update(r.Context(), f)
+		err = api.Flag.Update(r.Context(), f)
 		if err != nil {
 			writeErr(w, nil, err)
 			return
 		}
-		err = provisioner.ProvisionProject(r.Context(), p)
+		err = api.Provisioner.ProvisionProject(r.Context(), p)
 		if err != nil {
 			log.Warn().Str("id", projectId).Err(err).Msg("could not provision project")
 		}
@@ -107,15 +105,15 @@ func UpdateFlag(flagStore flag.FlagStore, projectStore project.ProjectStore, pro
 	}
 }
 
-func ListFlags(flagStore flag.FlagStore, projectStore project.ProjectStore) http.HandlerFunc {
+func (api *API) ListFlags() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		projectId := chi.URLParam(r, "projectId")
-		project, err := projectStore.Get(r.Context(), projectId)
+		project, err := api.Project.Get(r.Context(), projectId)
 		if err != nil {
 			writeErr(w, nil, err)
 			return
 		}
-		flags, err := flagStore.List(r.Context(), project.ID, 100, 0)
+		flags, err := api.Flag.List(r.Context(), project.ID, 100, 0)
 		if err != nil {
 			writeErr(w, nil, err)
 			return
@@ -128,7 +126,7 @@ func ListFlags(flagStore flag.FlagStore, projectStore project.ProjectStore) http
 	}
 }
 
-func GetFlag(flagStore flag.FlagStore) http.HandlerFunc {
+func (api *API) GetFlag() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		//projectId := chi.URLParam(r, "projectId")
 		flagId, err := flagId(r)
@@ -136,7 +134,7 @@ func GetFlag(flagStore flag.FlagStore) http.HandlerFunc {
 			writeErr(w, nil, err)
 			return
 		}
-		f, err := flagStore.Get(r.Context(), flagId)
+		f, err := api.Flag.Get(r.Context(), flagId)
 		if err != nil {
 			writeErr(w, nil, err)
 			return
@@ -149,10 +147,10 @@ func GetFlag(flagStore flag.FlagStore) http.HandlerFunc {
 	}
 }
 
-func DeleteFlag(flagStore flag.FlagStore, projectStore project.ProjectStore, provisioner provisioner.Provisioner) http.HandlerFunc {
+func (api *API) DeleteFlag() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		projectId := chi.URLParam(r, "projectId")
-		p, err := projectStore.Get(r.Context(), projectId)
+		p, err := api.Project.Get(r.Context(), projectId)
 		if err != nil {
 			writeErr(w, nil, err)
 			return
@@ -162,12 +160,12 @@ func DeleteFlag(flagStore flag.FlagStore, projectStore project.ProjectStore, pro
 			writeErr(w, nil, err)
 			return
 		}
-		err = flagStore.Delete(r.Context(), flagId)
+		err = api.Flag.Delete(r.Context(), flagId)
 		if err != nil {
 			writeErr(w, nil, err)
 			return
 		}
-		err = provisioner.ProvisionProject(r.Context(), p)
+		err = api.Provisioner.ProvisionProject(r.Context(), p)
 		if err != nil {
 			log.Warn().Str("id", projectId).Err(err).Msg("could not provision project")
 		}

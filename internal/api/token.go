@@ -1,7 +1,6 @@
 package api
 
 import (
-	"github.com/broswen/vex/internal/provisioner"
 	"github.com/broswen/vex/internal/stats"
 	"github.com/broswen/vex/internal/token"
 	"github.com/go-chi/chi/v5"
@@ -9,7 +8,7 @@ import (
 	"net/http"
 )
 
-func ListTokens(tokenStore token.TokenStore) http.HandlerFunc {
+func (api *API) ListTokens() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		accountId, err := accountId(r)
 		if err != nil {
@@ -17,7 +16,7 @@ func ListTokens(tokenStore token.TokenStore) http.HandlerFunc {
 			return
 		}
 		defer r.Body.Close()
-		tokens, err := tokenStore.List(r.Context(), accountId, 100, 0)
+		tokens, err := api.Token.List(r.Context(), accountId, 100, 0)
 		if err != nil {
 			writeErr(w, nil, err)
 			return
@@ -30,7 +29,7 @@ func ListTokens(tokenStore token.TokenStore) http.HandlerFunc {
 	}
 }
 
-func GenerateToken(tokenStore token.TokenStore, provisioner provisioner.Provisioner) http.HandlerFunc {
+func (api *API) GenerateToken() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		accountId, err := accountId(r)
 		if err != nil {
@@ -39,14 +38,14 @@ func GenerateToken(tokenStore token.TokenStore, provisioner provisioner.Provisio
 		}
 		readOnly := r.URL.Query().Get("readOnly")
 		defer r.Body.Close()
-		t, err := tokenStore.Generate(r.Context(), accountId, readOnly == "true")
+		t, err := api.Token.Generate(r.Context(), accountId, readOnly == "true")
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 		stats.TokenCreated.Inc()
 
-		err = provisioner.ProvisionToken(r.Context(), t)
+		err = api.Provisioner.ProvisionToken(r.Context(), t)
 		if err != nil {
 			log.Warn().Str("id", t.ID).Err(err).Msg("could not provision token")
 		}
@@ -58,19 +57,19 @@ func GenerateToken(tokenStore token.TokenStore, provisioner provisioner.Provisio
 	}
 }
 
-func RerollToken(tokenStore token.TokenStore, provisioner provisioner.Provisioner) http.HandlerFunc {
+func (api *API) RerollToken() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		//accountId := chi.URLParam(r, "accountId")
 		tokenId := chi.URLParam(r, "tokenId")
 		defer r.Body.Close()
-		t, err := tokenStore.Get(r.Context(), tokenId)
+		t, err := api.Token.Get(r.Context(), tokenId)
 		if err != nil {
 			writeErr(w, nil, err)
 			return
 		}
 		oldToken := t.Token
 
-		err = tokenStore.Reroll(r.Context(), t)
+		err = api.Token.Reroll(r.Context(), t)
 		if err != nil {
 			log.Error().Err(err).Msg("")
 			writeErr(w, nil, err)
@@ -78,13 +77,13 @@ func RerollToken(tokenStore token.TokenStore, provisioner provisioner.Provisione
 		}
 		stats.TokenRolled.Inc()
 
-		err = provisioner.ProvisionToken(r.Context(), t)
+		err = api.Provisioner.ProvisionToken(r.Context(), t)
 		if err != nil {
 			log.Warn().Str("id", t.ID).Err(err).Msg("could not provision new token")
 		}
 
 		//deprovision old token value
-		err = provisioner.DeprovisionToken(r.Context(), &token.Token{Token: oldToken})
+		err = api.Provisioner.DeprovisionToken(r.Context(), &token.Token{Token: oldToken})
 		if err != nil {
 			log.Warn().Str("id", t.ID).Err(err).Msg("could not deprovision old token")
 		}
@@ -97,23 +96,23 @@ func RerollToken(tokenStore token.TokenStore, provisioner provisioner.Provisione
 	}
 }
 
-func DeleteToken(tokenStore token.TokenStore, provisioner provisioner.Provisioner) http.HandlerFunc {
+func (api *API) DeleteToken() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		tokenId := chi.URLParam(r, "tokenId")
-		t, err := tokenStore.Get(r.Context(), tokenId)
+		t, err := api.Token.Get(r.Context(), tokenId)
 		if err != nil {
 			writeErr(w, nil, err)
 			return
 		}
 
-		err = tokenStore.Delete(r.Context(), tokenId)
+		err = api.Token.Delete(r.Context(), tokenId)
 		if err != nil {
 			writeErr(w, nil, err)
 			return
 		}
 		stats.TokenDeleted.Inc()
 
-		err = provisioner.DeprovisionToken(r.Context(), &token.Token{Token: t.Token})
+		err = api.Provisioner.DeprovisionToken(r.Context(), &token.Token{Token: t.Token})
 		if err != nil {
 			log.Warn().Str("id", t.ID).Err(err).Msg("could not deprovision token")
 		}

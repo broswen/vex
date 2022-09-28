@@ -46,6 +46,15 @@ func (m *MockStore) Get(ctx context.Context, id string) (*Account, error) {
 	return a, args.Error(0)
 }
 
+func (m *MockStore) List(ctx context.Context) ([]*Account, error) {
+	args := m.Called()
+	accounts := make([]*Account, 0)
+	for _, a := range m.accounts {
+		accounts = append(accounts, a)
+	}
+	return accounts, args.Error(0)
+}
+
 func (m *MockStore) Delete(ctx context.Context, id string) error {
 	args := m.Called()
 	delete(m.accounts, id)

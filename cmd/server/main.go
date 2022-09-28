@@ -103,18 +103,24 @@ func main() {
 		log.Fatal().Err(err)
 	}
 
+	eg := errgroup.Group{}
+
 	// start promhttp listener on metrics port
 	m := chi.NewRouter()
 	m.Handle(metricsPath, promhttp.Handler())
-	go func() {
-		if err := http.ListenAndServe(fmt.Sprintf(":%s", metricsPort), m); err != nil {
-			log.Fatal().Err(err)
-		}
-	}()
+	eg.Go(func() error {
+		return http.ListenAndServe(fmt.Sprintf(":%s", metricsPort), m)
+	})
 
-	eg := errgroup.Group{}
+	app := &api.API{
+		Account:     accountStore,
+		Project:     projectStore,
+		Flag:        flagStore,
+		Token:       tokenStore,
+		Provisioner: provisioner,
+	}
 
-	adminRouter := api.AdminRouter(accountStore, tokenStore, provisioner, teamDomain, policyAUD)
+	adminRouter := app.AdminRouter(teamDomain, policyAUD)
 	adminServer := http.Server{
 		Addr:    fmt.Sprintf(":%s", adminPort),
 		Handler: adminRouter,
@@ -130,7 +136,7 @@ func main() {
 		return nil
 	})
 
-	publicRouter := api.Router(projectStore, flagStore, accountStore, tokenStore, provisioner)
+	publicRouter := app.Router()
 	publicServer := http.Server{
 		Addr:    fmt.Sprintf(":%s", apiPort),
 		Handler: publicRouter,
