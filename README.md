@@ -193,6 +193,5 @@ terraform-provider-vex - https://github.com/broswen/terraform-provider-vex
 - [x] handle local provisioning for dockerfile, flag to skip api calls?
 - [ ] add mocks and tests with testify
 - [x] add created_on and modified_on fields to all resources
-  -  figure out why postgres trigger/procedure isn't working
 - [ ] incremental config builds
   - store prerendered config in postgres, parse and insert/update flags as needed

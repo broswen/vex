@@ -48,25 +48,25 @@ create or replace function update_modified_on() returns trigger as $$
 $$ language plpgsql;
 
 create trigger account_modified_on
-    after update or insert
+    before update or insert
     on account
     for each row
     execute procedure update_modified_on();
 
 create trigger token_modified_on
-    after update or insert
+    before update or insert
     on token
     for each row
 execute procedure update_modified_on();
 
 create trigger project_modified_on
-    after update or insert
+    before update or insert
     on project
     for each row
 execute procedure update_modified_on();
 
 create trigger flag_modified_on
-    after update or insert
+    before update or insert
     on flag
     for each row
 execute procedure update_modified_on();
