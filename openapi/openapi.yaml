@@ -1,0 +1,570 @@
+openapi: 3.0.0
+info:
+  title: vex
+  description: |
+    This API allows the management of remote configuration and feature flags.
+  version: 1.0.0
+
+servers:
+  - url: https://vex.broswen.com
+
+paths:
+  /accounts/{accountId}:
+    get:
+      security:
+        - bearerAuth: []
+      tags:
+        - Account
+      summary: Get an account
+      description: Get the details for a single account.
+      parameters:
+        - $ref: "#/components/parameters/accountId"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/response"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/account"
+    put:
+      security:
+        - bearerAuth: [ ]
+      tags:
+        - Account
+      summary: Update an account
+      description: Update the details for a single account.
+      parameters:
+        - $ref: "#/components/parameters/accountId"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+      responses:
+        "200":
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/response"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/account"
+    delete:
+      security:
+        - bearerAuth: [ ]
+      tags:
+        - Account
+      summary: Delete an account
+      description: Delete a single account.
+      parameters:
+        - $ref: "#/components/parameters/accountId"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/response"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/id"
+  /accounts/{accountId}/projects:
+    get:
+      security:
+        - bearerAuth: [ ]
+      tags:
+        - Project
+      summary: List projects
+      description: List all projects for an account.
+      parameters:
+        - $ref: "#/components/parameters/accountId"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/response"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/project"
+    post:
+      security:
+        - bearerAuth: [ ]
+      tags:
+        - Project
+      summary: Create a project
+      description: Create a new project.
+      parameters:
+        - $ref: "#/components/parameters/accountId"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/project"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/response"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/project"
+  /accounts/{accountId}/projects/{projectId}:
+    get:
+      security:
+        - bearerAuth: [ ]
+      tags:
+        - Project
+      summary: Get a project
+      description: Get the details for a single project.
+      parameters:
+        - $ref: "#/components/parameters/accountId"
+        - $ref: "#/components/parameters/projectId"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/response"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/project"
+    put:
+      security:
+        - bearerAuth: [ ]
+      tags:
+        - Project
+      summary: Update a project
+      description: Update the details for a single project.
+      parameters:
+        - $ref: "#/components/parameters/accountId"
+        - $ref: "#/components/parameters/projectId"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/project"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/response"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/project"
+    delete:
+      security:
+        - bearerAuth: [ ]
+      tags:
+        - Project
+      summary: Delete a project
+      description: Delete a single project.
+      parameters:
+        - $ref: "#/components/parameters/accountId"
+        - $ref: "#/components/parameters/projectId"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/response"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/id"
+  /accounts/{accountId}/projects/{projectId}/flags:
+    get:
+      security:
+        - bearerAuth: [ ]
+      tags:
+        - Flag
+      summary: List flags
+      description: List all flags for a project.
+      parameters:
+        - $ref: "#/components/parameters/accountId"
+        - $ref: "#/components/parameters/projectId"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/response"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/flag"
+    post:
+      security:
+        - bearerAuth: [ ]
+      tags:
+        - Flag
+      summary: Create a new flag
+      description: Create a new flag for a project.
+      parameters:
+        - $ref: "#/components/parameters/accountId"
+        - $ref: "#/components/parameters/projectId"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/flag"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/response"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/flag"
+  /accounts/{accountId}/projects/{projectId}/flags/{flagId}:
+    get:
+      security:
+        - bearerAuth: [ ]
+      tags:
+        - Flag
+      summary: Get a flag
+      description: Get the details for a single flag.
+      parameters:
+        - $ref: "#/components/parameters/accountId"
+        - $ref: "#/components/parameters/projectId"
+        - $ref: "#/components/parameters/flagId"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/response"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/flag"
+    put:
+      security:
+        - bearerAuth: [ ]
+      tags:
+        - Flag
+      summary: Update a flag
+      description: Update the details for a single flag.
+      parameters:
+        - $ref: "#/components/parameters/accountId"
+        - $ref: "#/components/parameters/projectId"
+        - $ref: "#/components/parameters/flagId"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/flag"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/response"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/flag"
+    delete:
+      security:
+        - bearerAuth: [ ]
+      tags:
+        - Flag
+      summary: Delete a flag
+      description: Delete a single flag.
+      parameters:
+        - $ref: "#/components/parameters/accountId"
+        - $ref: "#/components/parameters/projectId"
+        - $ref: "#/components/parameters/flagId"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/response"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/id"
+  /accounts/{accountId}/tokens:
+    get:
+      security:
+        - bearerAuth: [ ]
+      tags:
+        - Token
+      summary: List all tokens
+      description: List all tokens for an account.
+      parameters:
+        - $ref: "#/components/parameters/accountId"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/response"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/token"
+    post:
+      security:
+        - bearerAuth: [ ]
+      tags:
+        - Token
+      summary: Create a new token
+      description: Create a new token for an account.
+      parameters:
+        - $ref: "#/components/parameters/accountId"
+        - $ref: "#/components/parameters/readOnly"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/response"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/newToken"
+  /accounts/{accountId}/tokens/{tokenId}:
+    put:
+      security:
+        - bearerAuth: [ ]
+      tags:
+        - Token
+      summary: Re-roll a token
+      description: Re-roll a single token.
+      parameters:
+        - $ref: "#/components/parameters/accountId"
+        - $ref: "#/components/parameters/tokenId"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/response"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/newToken"
+    delete:
+      security:
+        - bearerAuth: [ ]
+      tags:
+        - Token
+      summary: Delete a token
+      description: Delete a single token.
+      parameters:
+        - $ref: "#/components/parameters/accountId"
+        - $ref: "#/components/parameters/tokenId"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/response"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/id"
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+
+  schemas:
+    id:
+      type: object
+      properties:
+        id:
+          type: string
+    timestamp:
+      type: string
+      description: a timestamp represented in RFC3339 nano format
+      example: 2022-08-15T02:57:56.753876Z
+    account:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        created_on:
+          $ref: "#/components/schemas/timestamp"
+        modified_on:
+          $ref: "#/components/schemas/timestamp"
+    project:
+      type: object
+      properties:
+        id:
+          type: string
+        account_id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        created_on:
+          $ref: "#/components/schemas/timestamp"
+        modified_on:
+          $ref: "#/components/schemas/timestamp"
+    flag:
+      type: object
+      properties:
+        id:
+          type: string
+        project_id:
+          type: string
+        account_id:
+          type: string
+        key:
+          type: string
+        type:
+          type: string
+          enum:
+            - "STRING"
+            - "NUMBER"
+            - "BOOLEAN"
+        value:
+          type: string
+        created_on:
+          $ref: "#/components/schemas/timestamp"
+        modified_on:
+          $ref: "#/components/schemas/timestamp"
+    newToken:
+      type: object
+      properties:
+        id:
+          type: string
+        token:
+          type: string
+          description: The secret value of the token, only shown once.
+          example: 0be2784d2c16943be7295b8dedc4561c
+        account_id:
+          type: string
+        read_only:
+          type: boolean
+        created_on:
+          type: string
+        modified_on:
+          type: string
+    token:
+      type: object
+      properties:
+        id:
+          type: string
+        account_id:
+          type: string
+        read_only:
+          type: boolean
+        created_on:
+          $ref: "#/components/schemas/timestamp"
+        modified_on:
+          $ref: "#/components/schemas/timestamp"
+    response:
+      type: object
+      properties:
+        data:
+          type: object
+        success:
+          type: boolean
+        errors:
+          type: array
+          items:
+            type: string
+
+  parameters:
+    accountId:
+      name: accountId
+      in: path
+      required: true
+      schema:
+        type: string
+      example: cb6049d9-7720-4442-89be-f9500c72a73b
+    projectId:
+      name: projectId
+      in: path
+      required: true
+      schema:
+        type: string
+      example: ed7f9f1c-4416-4f2f-8ff1-cfe10c8d14e0
+    flagId:
+      name: flagId
+      in: path
+      required: true
+      schema:
+        type: string
+      example: 00489c7e-0bf1-4636-865e-294079234658
+    tokenId:
+      name: tokenId
+      in: path
+      required: true
+      schema:
+        type: string
+      example: 8eafc880-9493-4d00-b9e7-389e9ce989fd
+    readOnly:
+      name: readOnly
+      in: query
+      required: false
+      schema:
+        type: boolean
+      example: true

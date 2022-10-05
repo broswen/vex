@@ -176,6 +176,10 @@ This worker allows for fast and distributed access to the project configuration.
   }
 }
 ```
+
+### OpenAPI 3 
+An OpenAPI spec that describes all endpoints is located at `./openapi/openapi.yaml`
+
 ## Client Libraries
 
 Go - https://github.com/broswen/vex-go
