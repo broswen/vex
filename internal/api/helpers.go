@@ -7,12 +7,49 @@ import (
 	"github.com/go-chi/chi/v5"
 	"io"
 	"net/http"
+	"strconv"
 )
 
 type V1Response struct {
 	Data    any      `json:"data"`
 	Success bool     `json:"success"`
 	Errors  []string `json:"errors"`
+}
+
+type Pagination struct {
+	Offset int64 `json:"offset"`
+	Limit  int64 `json:"limit"`
+}
+
+const PaginationMaxLimit int64 = 100
+
+func pagination(r *http.Request) Pagination {
+	p := Pagination{
+		Offset: 0,
+		Limit:  100,
+	}
+	limit := r.URL.Query().Get("limit")
+	if limit != "" {
+		if value, err := strconv.ParseInt(limit, 10, 64); err == nil {
+			p.Limit = value
+		} else {
+			p.Limit = PaginationMaxLimit
+		}
+	}
+	offset := r.URL.Query().Get("offset")
+	if offset != "" {
+		if value, err := strconv.ParseInt(offset, 10, 64); err == nil {
+			p.Offset = value
+		} else {
+			p.Offset = 0
+		}
+	}
+
+	if p.Limit > PaginationMaxLimit || p.Limit < 1 {
+		p.Limit = PaginationMaxLimit
+	}
+
+	return p
 }
 
 func accountId(r *http.Request) (string, error) {
