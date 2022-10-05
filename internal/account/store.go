@@ -9,7 +9,7 @@ type AccountStore interface {
 	Insert(ctx context.Context, a *Account) error
 	Update(ctx context.Context, a *Account) error
 	Get(ctx context.Context, id string) (*Account, error)
-	List(ctx context.Context) ([]*Account, error)
+	List(ctx context.Context, limit, offset int64) ([]*Account, error)
 	Delete(ctx context.Context, id string) error
 }
 
@@ -70,8 +70,8 @@ func (store *Store) Get(ctx context.Context, id string) (*Account, error) {
 	return a, nil
 }
 
-func (store *Store) List(ctx context.Context) ([]*Account, error) {
-	rows, err := store.db.Query(ctx, `SELECT id, account_name, account_description, created_on, modified_on FROM account;`)
+func (store *Store) List(ctx context.Context, limit, offset int64) ([]*Account, error) {
+	rows, err := store.db.Query(ctx, `SELECT id, account_name, account_description, created_on, modified_on FROM account LIMIT $1 OFFSET $2;`, limit, offset)
 	err = db.PgError(err)
 	if err != nil {
 		switch err {

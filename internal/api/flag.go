@@ -113,7 +113,8 @@ func (api *API) ListFlags() http.HandlerFunc {
 			writeErr(w, nil, err)
 			return
 		}
-		flags, err := api.Flag.List(r.Context(), project.ID, 100, 0)
+		p := pagination(r)
+		flags, err := api.Flag.List(r.Context(), project.ID, p.Limit, p.Offset)
 		if err != nil {
 			writeErr(w, nil, err)
 			return

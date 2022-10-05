@@ -63,12 +63,13 @@ func (api *API) UpdateAccount() http.HandlerFunc {
 
 func (api *API) ListAccounts() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		p, err := api.Account.List(r.Context())
+		p := pagination(r)
+		a, err := api.Account.List(r.Context(), p.Limit, p.Offset)
 		if err != nil {
 			writeErr(w, nil, err)
 			return
 		}
-		err = writeOK(w, http.StatusOK, p)
+		err = writeOK(w, http.StatusOK, a)
 		if err != nil {
 			writeErr(w, nil, err)
 			return

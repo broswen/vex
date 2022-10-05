@@ -46,7 +46,7 @@ func (m *MockStore) Get(ctx context.Context, id string) (*Account, error) {
 	return a, args.Error(0)
 }
 
-func (m *MockStore) List(ctx context.Context) ([]*Account, error) {
+func (m *MockStore) List(ctx context.Context, limit, offset int64) ([]*Account, error) {
 	args := m.Called()
 	accounts := make([]*Account, 0)
 	for _, a := range m.accounts {

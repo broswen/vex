@@ -70,7 +70,8 @@ func (api *API) UpdateProject() http.HandlerFunc {
 func (api *API) ListProjects() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		accountId := chi.URLParam(r, "accountId")
-		projects, err := api.Project.List(r.Context(), accountId, 100, 0)
+		p := pagination(r)
+		projects, err := api.Project.List(r.Context(), accountId, p.Limit, p.Offset)
 		if err != nil {
 			writeErr(w, nil, err)
 			return

@@ -16,7 +16,8 @@ func (api *API) ListTokens() http.HandlerFunc {
 			return
 		}
 		defer r.Body.Close()
-		tokens, err := api.Token.List(r.Context(), accountId, 100, 0)
+		p := pagination(r)
+		tokens, err := api.Token.List(r.Context(), accountId, p.Limit, p.Offset)
 		if err != nil {
 			writeErr(w, nil, err)
 			return

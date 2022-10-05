@@ -20,16 +20,17 @@ func AccountAuthorizer(tokenStore token.TokenStore) func(next http.Handler) http
 				return
 			}
 			if authHeader == "" {
+				log.Warn().Msg("didn't find authorization header")
 				writeErr(w, nil, ErrUnauthorized)
 				return
 			}
 			parts := strings.Split(authHeader, " ")
 			if len(parts) != 2 {
+				log.Warn().Msg("didn't find bearer token")
 				writeErr(w, nil, ErrUnauthorized)
 				return
 			}
 			token := parts[1]
-			log.Debug().Msg("found authorization token")
 			t, err := tokenStore.GetByToken(r.Context(), token)
 			if err != nil {
 				log.Debug().Err(err).Msg("couldn't get by token")
