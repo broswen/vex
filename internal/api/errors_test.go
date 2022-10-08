@@ -20,8 +20,8 @@ func TestRenderError(t *testing.T) {
 			ExpectedMessage: "unknown error",
 		},
 		{
-			Err:             flag.ErrInvalidData{Err: errors.New("invalid value for number flag")},
-			ExpectedErr:     ErrBadRequest.WithError(flag.ErrInvalidData{Err: errors.New("invalid value for number flag")}),
+			Err:             flag.ErrInvalidData{"invalid value for number flag"},
+			ExpectedErr:     ErrBadRequest.WithError(flag.ErrInvalidData{"invalid value for number flag"}),
 			ExpectedMessage: "bad request: invalid value for number flag",
 		},
 		{

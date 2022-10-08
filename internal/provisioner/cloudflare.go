@@ -92,7 +92,7 @@ func (p *CloudflareProvisioner) ProvisionToken(ctx context.Context, t *token.Tok
 }
 
 func (p *CloudflareProvisioner) DeprovisionToken(ctx context.Context, t *token.Token) error {
-	resp, err := p.api.DeleteWorkersKV(ctx, p.tokenKVNamespaceID, t.Token)
+	resp, err := p.api.DeleteWorkersKV(ctx, p.tokenKVNamespaceID, hex.EncodeToString(t.TokenHash))
 	if !resp.Success {
 		log.Warn().Msgf("errors: %v", resp.Errors)
 		log.Warn().Msgf("messages: %v", resp.Messages)

@@ -13,25 +13,17 @@ func (e ErrUnknown) Unwrap() error {
 }
 
 type ErrProjectNotFound struct {
-	Err error
+	Message string
 }
 
 func (e ErrProjectNotFound) Error() string {
-	return e.Err.Error()
-}
-
-func (e ErrProjectNotFound) Unwrap() error {
-	return e.Err
+	return e.Message
 }
 
 type ErrInvalidData struct {
-	Err error
+	Message string
 }
 
 func (e ErrInvalidData) Error() string {
-	return e.Err.Error()
-}
-
-func (e ErrInvalidData) Unwrap() error {
-	return e.Err
+	return e.Message
 }

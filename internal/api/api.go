@@ -32,8 +32,11 @@ func (api *API) AdminRouter(teamDomain, policyAUD string) http.Handler {
 	r.Post("/admin/accounts", api.CreateAccount())
 
 	r.Post("/admin/accounts/{accountId}/tokens", api.GenerateToken())
+	r.Put("/admin/accounts/{accountId}/tokens/{tokenId}", api.RerollToken())
+
 	return r
 }
+
 func (api *API) Router() http.Handler {
 	r := chi.NewRouter()
 	r.Use(middleware.StripSlashes)

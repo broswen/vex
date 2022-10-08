@@ -13,37 +13,25 @@ func (e ErrUnknown) Unwrap() error {
 }
 
 type ErrFlagNotFound struct {
-	Err error
+	Message string
 }
 
 func (e ErrFlagNotFound) Error() string {
-	return e.Err.Error()
-}
-
-func (e ErrFlagNotFound) Unwrap() error {
-	return e.Err
+	return e.Message
 }
 
 type ErrInvalidData struct {
-	Err error
+	Message string
 }
 
 func (e ErrInvalidData) Error() string {
-	return e.Err.Error()
-}
-
-func (e ErrInvalidData) Unwrap() error {
-	return e.Err
+	return e.Message
 }
 
 type ErrKeyNotUnique struct {
-	Err error
+	Message string
 }
 
 func (e ErrKeyNotUnique) Error() string {
-	return e.Err.Error()
-}
-
-func (e ErrKeyNotUnique) Unwrap() error {
-	return e.Err
+	return e.Message
 }

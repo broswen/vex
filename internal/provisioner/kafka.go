@@ -88,7 +88,7 @@ func (p *KafkaProvisioner) DeprovisionToken(ctx context.Context, t *token.Token)
 	_, _, err := p.producer.SendMessage(&sarama.ProducerMessage{
 		Topic:     p.deprovisionTokenTopic,
 		Key:       sarama.StringEncoder(t.Token),
-		Value:     sarama.StringEncoder(t.Token),
+		Value:     sarama.ByteEncoder(t.TokenHash),
 		Timestamp: time.Now(),
 	})
 	if err != nil {

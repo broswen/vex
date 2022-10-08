@@ -19,14 +19,14 @@ func (api *API) CreateProject() http.HandlerFunc {
 		}
 		defer r.Body.Close()
 		p.AccountID = accountId
-		err = api.Project.Insert(r.Context(), p)
+		newProject, err := api.Project.Insert(r.Context(), p)
 
 		if err != nil {
 			writeErr(w, nil, err)
 			return
 		}
 		stats.ProjectCreated.Inc()
-		err = writeOK(w, http.StatusOK, p)
+		err = writeOK(w, http.StatusOK, newProject)
 		if err != nil {
 			writeErr(w, nil, err)
 			return
@@ -53,13 +53,13 @@ func (api *API) UpdateProject() http.HandlerFunc {
 		p.ID = projectId
 		p.AccountID = accountId
 
-		err = api.Project.Update(r.Context(), p)
+		updatedProject, err := api.Project.Update(r.Context(), p)
 
 		if err != nil {
 			writeErr(w, nil, err)
 			return
 		}
-		err = writeOK(w, http.StatusOK, p)
+		err = writeOK(w, http.StatusOK, updatedProject)
 		if err != nil {
 			writeErr(w, nil, err)
 			return

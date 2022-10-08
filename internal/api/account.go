@@ -7,21 +7,21 @@ import (
 
 func (api *API) CreateAccount() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		p := &account.Account{}
-		err := readJSON(w, r, p)
+		a := &account.Account{}
+		err := readJSON(w, r, a)
 		if err != nil {
 			writeErr(w, nil, err)
 			return
 		}
 		defer r.Body.Close()
-		err = api.Account.Insert(r.Context(), p)
+		newAccount, err := api.Account.Insert(r.Context(), a)
 
 		if err != nil {
 			writeErr(w, nil, err)
 			return
 		}
 
-		err = writeOK(w, http.StatusOK, p)
+		err = writeOK(w, http.StatusOK, newAccount)
 		if err != nil {
 			writeErr(w, nil, err)
 			return
@@ -36,24 +36,24 @@ func (api *API) UpdateAccount() http.HandlerFunc {
 			writeErr(w, nil, err)
 			return
 		}
-		p := &account.Account{}
-		err = readJSON(w, r, p)
+		a := &account.Account{}
+		err = readJSON(w, r, a)
 		if err != nil {
 			writeErr(w, nil, ErrBadRequest.WithError(err))
 			return
 		}
 		defer r.Body.Close()
 
-		p.ID = accountId
+		a.ID = accountId
 
-		err = api.Account.Update(r.Context(), p)
+		updatedAccount, err := api.Account.Update(r.Context(), a)
 
 		if err != nil {
 			writeErr(w, nil, err)
 			return
 		}
 
-		err = writeOK(w, http.StatusOK, p)
+		err = writeOK(w, http.StatusOK, updatedAccount)
 		if err != nil {
 			writeErr(w, nil, err)
 			return

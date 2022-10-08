@@ -68,9 +68,8 @@ func (api *API) RerollToken() http.HandlerFunc {
 			writeErr(w, nil, err)
 			return
 		}
-		oldToken := t.Token
 
-		err = api.Token.Reroll(r.Context(), t)
+		updatedToken, err := api.Token.Reroll(r.Context(), t.ID)
 		if err != nil {
 			log.Error().Err(err).Msg("")
 			writeErr(w, nil, err)
@@ -78,18 +77,18 @@ func (api *API) RerollToken() http.HandlerFunc {
 		}
 		stats.TokenRolled.Inc()
 
-		err = api.Provisioner.ProvisionToken(r.Context(), t)
+		err = api.Provisioner.ProvisionToken(r.Context(), updatedToken)
 		if err != nil {
-			log.Warn().Str("id", t.ID).Err(err).Msg("could not provision new token")
+			log.Warn().Str("id", updatedToken.ID).Err(err).Msg("could not provision new token")
 		}
 
 		//deprovision old token value
-		err = api.Provisioner.DeprovisionToken(r.Context(), &token.Token{Token: oldToken})
+		err = api.Provisioner.DeprovisionToken(r.Context(), t)
 		if err != nil {
 			log.Warn().Str("id", t.ID).Err(err).Msg("could not deprovision old token")
 		}
 
-		err = writeOK(w, http.StatusOK, t)
+		err = writeOK(w, http.StatusOK, updatedToken)
 		if err != nil {
 			writeErr(w, nil, err)
 			return

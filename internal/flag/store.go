@@ -7,8 +7,8 @@ import (
 
 type FlagStore interface {
 	List(ctx context.Context, projectId string, limit, offset int64) ([]*Flag, error)
-	Insert(ctx context.Context, f *Flag) error
-	Update(ctx context.Context, f *Flag) error
+	Insert(ctx context.Context, f *Flag) (*Flag, error)
+	Update(ctx context.Context, f *Flag) (*Flag, error)
 	Get(ctx context.Context, id string) (*Flag, error)
 	Delete(ctx context.Context, id string) error
 }
@@ -27,9 +27,9 @@ func (store *Store) List(ctx context.Context, projectId string, limit, offset in
 	if err != nil {
 		switch err {
 		case db.ErrNotFound:
-			return nil, ErrFlagNotFound{err}
+			return nil, ErrFlagNotFound{err.Error()}
 		case db.ErrInvalidData:
-			return nil, ErrInvalidData{err}
+			return nil, ErrInvalidData{err.Error()}
 		default:
 			return nil, ErrUnknown{err}
 		}
@@ -47,40 +47,42 @@ func (store *Store) List(ctx context.Context, projectId string, limit, offset in
 	return fs, nil
 }
 
-func (store *Store) Insert(ctx context.Context, f *Flag) error {
+func (store *Store) Insert(ctx context.Context, f *Flag) (*Flag, error) {
+	newFlag := &Flag{}
 	err := db.PgError(store.db.QueryRow(ctx, `INSERT INTO flag (flag_key, flag_type, flag_value, project_id, account_id) VALUES ($1, $2, $3, $4, $5) RETURNING id, flag_key, flag_type, flag_value, project_id, account_id, created_on, modified_on;`,
-		f.Key, f.Type, f.Value, f.ProjectID, f.AccountID).Scan(&f.ID, &f.Key, &f.Type, &f.Value, &f.ProjectID, &f.AccountID, &f.CreatedOn, &f.ModifiedOn))
+		f.Key, f.Type, f.Value, f.ProjectID, f.AccountID).Scan(&newFlag.ID, &newFlag.Key, &newFlag.Type, &newFlag.Value, &newFlag.ProjectID, &newFlag.AccountID, &newFlag.CreatedOn, &newFlag.ModifiedOn))
 	if err != nil {
 		switch err {
 		case db.ErrNotFound:
-			return ErrFlagNotFound{err}
+			return newFlag, ErrFlagNotFound{err.Error()}
 		case db.ErrKeyNotUnique:
-			return ErrKeyNotUnique{err}
+			return newFlag, ErrKeyNotUnique{err.Error()}
 		case db.ErrInvalidData:
-			return ErrInvalidData{err}
+			return newFlag, ErrInvalidData{err.Error()}
 		default:
-			return ErrUnknown{err}
+			return newFlag, ErrUnknown{err}
 		}
 	}
-	return nil
+	return newFlag, nil
 }
 
-func (store *Store) Update(ctx context.Context, f *Flag) error {
+func (store *Store) Update(ctx context.Context, f *Flag) (*Flag, error) {
+	updatedFlag := &Flag{}
 	err := db.PgError(store.db.QueryRow(ctx, `UPDATE flag SET flag_key = $2, flag_type = $3, flag_value = $4, project_id = $5, account_id = $6 WHERE id = $1 RETURNING id, flag_key, flag_type, flag_value, project_id, account_id, created_on, modified_on;`,
-		f.ID, f.Key, f.Type, f.Value, f.ProjectID, f.AccountID).Scan(&f.ID, &f.Key, &f.Type, &f.Value, &f.ProjectID, &f.AccountID, &f.CreatedOn, &f.ModifiedOn))
+		f.ID, f.Key, f.Type, f.Value, f.ProjectID, f.AccountID).Scan(&updatedFlag.ID, &updatedFlag.Key, &updatedFlag.Type, &updatedFlag.Value, &updatedFlag.ProjectID, &updatedFlag.AccountID, &updatedFlag.CreatedOn, &updatedFlag.ModifiedOn))
 	if err != nil {
 		switch err {
 		case db.ErrNotFound:
-			return ErrFlagNotFound{err}
+			return updatedFlag, ErrFlagNotFound{err.Error()}
 		case db.ErrKeyNotUnique:
-			return ErrKeyNotUnique{err}
+			return updatedFlag, ErrKeyNotUnique{err.Error()}
 		case db.ErrInvalidData:
-			return ErrInvalidData{err}
+			return updatedFlag, ErrInvalidData{err.Error()}
 		default:
-			return ErrUnknown{err}
+			return updatedFlag, ErrUnknown{err}
 		}
 	}
-	return nil
+	return updatedFlag, nil
 }
 
 func (store *Store) Get(ctx context.Context, id string) (*Flag, error) {
@@ -91,11 +93,11 @@ func (store *Store) Get(ctx context.Context, id string) (*Flag, error) {
 	if err != nil {
 		switch err {
 		case db.ErrNotFound:
-			return f, ErrFlagNotFound{err}
+			return f, ErrFlagNotFound{err.Error()}
 		case db.ErrKeyNotUnique:
-			return f, ErrKeyNotUnique{err}
+			return f, ErrKeyNotUnique{err.Error()}
 		case db.ErrInvalidData:
-			return f, ErrInvalidData{err}
+			return f, ErrInvalidData{err.Error()}
 		default:
 			return f, ErrUnknown{err}
 		}
@@ -107,17 +109,17 @@ func (store *Store) Delete(ctx context.Context, id string) error {
 	res, err := store.db.Exec(ctx, `DELETE FROM flag WHERE id = $1;`, id)
 	err = db.PgError(err)
 	if res.RowsAffected() == 0 && err == nil {
-		return ErrFlagNotFound{db.ErrNotFound}
+		return ErrFlagNotFound{db.ErrNotFound.Error()}
 	}
 
 	if err != nil {
 		switch err {
 		case db.ErrNotFound:
-			return ErrFlagNotFound{err}
+			return ErrFlagNotFound{err.Error()}
 		case db.ErrKeyNotUnique:
-			return ErrKeyNotUnique{err}
+			return ErrKeyNotUnique{err.Error()}
 		case db.ErrInvalidData:
-			return ErrInvalidData{err}
+			return ErrInvalidData{err.Error()}
 		default:
 			return ErrUnknown{err}
 		}

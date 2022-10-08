@@ -32,7 +32,7 @@ func (api *API) CreateFlag() http.HandlerFunc {
 			return
 		}
 
-		err = api.Flag.Insert(r.Context(), f)
+		newFlag, err := api.Flag.Insert(r.Context(), f)
 
 		if err != nil {
 			writeErr(w, nil, err)
@@ -46,7 +46,7 @@ func (api *API) CreateFlag() http.HandlerFunc {
 
 		stats.FlagCreated.Inc()
 
-		err = writeOK(w, http.StatusOK, f)
+		err = writeOK(w, http.StatusOK, newFlag)
 		if err != nil {
 			writeErr(w, nil, err)
 			return
@@ -85,7 +85,7 @@ func (api *API) UpdateFlag() http.HandlerFunc {
 			return
 		}
 
-		err = api.Flag.Update(r.Context(), f)
+		updatedFlag, err := api.Flag.Update(r.Context(), f)
 		if err != nil {
 			writeErr(w, nil, err)
 			return
@@ -97,7 +97,7 @@ func (api *API) UpdateFlag() http.HandlerFunc {
 
 		stats.FlagUpdated.Inc()
 
-		err = writeOK(w, http.StatusOK, f)
+		err = writeOK(w, http.StatusOK, updatedFlag)
 		if err != nil {
 			writeErr(w, nil, err)
 			return

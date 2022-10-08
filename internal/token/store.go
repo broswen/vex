@@ -11,7 +11,7 @@ import (
 type TokenStore interface {
 	List(ctx context.Context, accountId string, limit, offset int64) ([]*Token, error)
 	Generate(ctx context.Context, accountId string, readOnly bool) (*Token, error)
-	Reroll(ctx context.Context, t *Token) error
+	Reroll(ctx context.Context, tokenId string) (*Token, error)
 	Get(ctx context.Context, id string) (*Token, error)
 	GetByToken(ctx context.Context, token string) (*Token, error)
 	Delete(ctx context.Context, id string) error
@@ -49,15 +49,16 @@ func (store *Store) Generate(ctx context.Context, accountId string, readOnly boo
 	return t, err
 }
 
-func (store *Store) Reroll(ctx context.Context, t *Token) error {
+func (store *Store) Reroll(ctx context.Context, tokenId string) (*Token, error) {
 	generatedToken, tokenHash, err := GenerateTokenAndHash(16)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	err = db.PgError(store.db.QueryRow(ctx, `UPDATE token SET token_hash = $1 WHERE id = $2 AND account_id = $3 RETURNING id, account_id, read_only, created_on, modified_on;`,
-		tokenHash, t.ID, t.AccountID).Scan(&t.ID, &t.AccountID, &t.ReadOnly, &t.CreatedOn, &t.ModifiedOn))
-	t.Token = generatedToken
-	return err
+	updatedToken := &Token{}
+	err = db.PgError(store.db.QueryRow(ctx, `UPDATE token SET token_hash = $1 WHERE id = $2 RETURNING id, account_id, read_only, created_on, modified_on;`,
+		tokenHash, tokenId).Scan(&updatedToken.ID, &updatedToken.AccountID, &updatedToken.ReadOnly, &updatedToken.CreatedOn, &updatedToken.ModifiedOn))
+	updatedToken.Token = generatedToken
+	return updatedToken, err
 }
 
 func (store *Store) Get(ctx context.Context, id string) (*Token, error) {

@@ -6,8 +6,8 @@ import (
 )
 
 type AccountStore interface {
-	Insert(ctx context.Context, a *Account) error
-	Update(ctx context.Context, a *Account) error
+	Insert(ctx context.Context, a *Account) (*Account, error)
+	Update(ctx context.Context, a *Account) (*Account, error)
 	Get(ctx context.Context, id string) (*Account, error)
 	List(ctx context.Context, limit, offset int64) ([]*Account, error)
 	Delete(ctx context.Context, id string) error
@@ -21,36 +21,38 @@ func NewPostgresStore(database *db.Database) (*Store, error) {
 	return &Store{db: database}, nil
 }
 
-func (store *Store) Insert(ctx context.Context, a *Account) error {
+func (store *Store) Insert(ctx context.Context, a *Account) (*Account, error) {
+	newAccount := &Account{}
 	err := db.PgError(store.db.QueryRow(ctx, `INSERT INTO account (account_name, account_description) VALUES ($1, $2) RETURNING id, account_name, account_description, created_on, modified_on;`,
-		a.Name, a.Description).Scan(&a.ID, &a.Name, &a.Description, &a.CreatedOn, &a.ModifiedOn))
+		a.Name, a.Description).Scan(&newAccount.ID, &newAccount.Name, &newAccount.Description, &newAccount.CreatedOn, &newAccount.ModifiedOn))
 	if err != nil {
 		switch err {
 		case db.ErrNotFound:
-			return ErrAccountNotFound{err}
+			return newAccount, ErrAccountNotFound{err}
 		case db.ErrInvalidData:
-			return ErrInvalidData{err}
+			return newAccount, ErrInvalidData{err}
 		default:
-			return ErrUnknown{err}
+			return newAccount, ErrUnknown{err}
 		}
 	}
-	return nil
+	return newAccount, nil
 }
 
-func (store *Store) Update(ctx context.Context, a *Account) error {
+func (store *Store) Update(ctx context.Context, a *Account) (*Account, error) {
+	newAccount := &Account{}
 	err := db.PgError(store.db.QueryRow(ctx, `UPDATE account SET account_name = $2, account_description = $3 WHERE id = $1 RETURNING id, account_name, account_description, created_on, modified_on;`,
-		a.ID, a.Name, a.Description).Scan(&a.ID, &a.Name, &a.Description, &a.CreatedOn, &a.ModifiedOn))
+		a.ID, a.Name, a.Description).Scan(&newAccount.ID, &newAccount.Name, &newAccount.Description, &newAccount.CreatedOn, &newAccount.ModifiedOn))
 	if err != nil {
 		switch err {
 		case db.ErrNotFound:
-			return ErrAccountNotFound{err}
+			return newAccount, ErrAccountNotFound{err}
 		case db.ErrInvalidData:
-			return ErrInvalidData{err}
+			return newAccount, ErrInvalidData{err}
 		default:
-			return ErrUnknown{err}
+			return newAccount, ErrUnknown{err}
 		}
 	}
-	return nil
+	return newAccount, nil
 }
 
 func (store *Store) Get(ctx context.Context, id string) (*Account, error) {

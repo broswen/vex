@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/hex"
 	"errors"
 	"flag"
 	"fmt"
@@ -119,9 +120,9 @@ func main() {
 		return cloudflareProvisioner.ProvisionToken(context.Background(), &token.Token{ID: string(message.Value)})
 	})
 	consumer.HandleFunc("vex-deprovision-token", func(message *sarama.ConsumerMessage) error {
-		log.Debug().Str("token", string(message.Value)).Msg("deprovisioning token")
+		log.Debug().Str("token_hash", hex.EncodeToString(message.Value)).Msg("deprovisioning token")
 		stats.ProjectDeprovisioned.Inc()
-		return cloudflareProvisioner.DeprovisionToken(context.Background(), &token.Token{Token: string(message.Value)})
+		return cloudflareProvisioner.DeprovisionToken(context.Background(), &token.Token{TokenHash: message.Value})
 	})
 
 	ctx, cancel := context.WithCancel(context.Background())

@@ -7,8 +7,8 @@ import (
 
 type ProjectStore interface {
 	List(ctx context.Context, accountId string, limit, offset int64) ([]*Project, error)
-	Insert(ctx context.Context, p *Project) error
-	Update(ctx context.Context, p *Project) error
+	Insert(ctx context.Context, p *Project) (*Project, error)
+	Update(ctx context.Context, p *Project) (*Project, error)
 	Get(ctx context.Context, projectId string) (*Project, error)
 	Delete(ctx context.Context, projectId string) error
 }
@@ -27,7 +27,7 @@ func (store *Store) List(ctx context.Context, accountId string, limit, offset in
 	if err != nil {
 		switch err {
 		case db.ErrNotFound:
-			return nil, ErrProjectNotFound{err}
+			return nil, ErrProjectNotFound{err.Error()}
 		default:
 			return nil, ErrUnknown{err}
 		}
@@ -45,39 +45,41 @@ func (store *Store) List(ctx context.Context, accountId string, limit, offset in
 	return ps, nil
 }
 
-func (store *Store) Insert(ctx context.Context, p *Project) error {
+func (store *Store) Insert(ctx context.Context, p *Project) (*Project, error) {
+	newProject := &Project{}
 	err := db.PgError(store.db.QueryRow(ctx, `INSERT INTO project (account_id, project_name, project_description) VALUES ($1, $2, $3) RETURNING id, account_id, project_name, project_description, created_on, modified_on;`,
-		p.AccountID, p.Name, p.Description).Scan(&p.ID, &p.AccountID, &p.Name, &p.Description, &p.CreatedOn, &p.ModifiedOn))
+		p.AccountID, p.Name, p.Description).Scan(&newProject.ID, &newProject.AccountID, &newProject.Name, &newProject.Description, &newProject.CreatedOn, &newProject.ModifiedOn))
 
 	if err != nil {
 		switch err {
 		case db.ErrNotFound:
-			return ErrProjectNotFound{err}
+			return newProject, ErrProjectNotFound{err.Error()}
 		case db.ErrInvalidData:
-			return ErrInvalidData{err}
+			return newProject, ErrInvalidData{err.Error()}
 		default:
-			return ErrUnknown{err}
+			return newProject, ErrUnknown{err}
 		}
 	}
 
-	return nil
+	return newProject, nil
 }
 
-func (store *Store) Update(ctx context.Context, p *Project) error {
+func (store *Store) Update(ctx context.Context, p *Project) (*Project, error) {
+	newProject := &Project{}
 	err := db.PgError(store.db.QueryRow(ctx, `UPDATE project SET project_name = $2, project_description = $3 WHERE id = $1 RETURNING id, account_id, project_name, project_description, created_on, modified_on;`,
-		p.ID, p.Name, p.Description).Scan(&p.ID, &p.AccountID, &p.Name, &p.Description, &p.CreatedOn, &p.ModifiedOn))
+		p.ID, p.Name, p.Description).Scan(&newProject.ID, &newProject.AccountID, &newProject.Name, &newProject.Description, &newProject.CreatedOn, &newProject.ModifiedOn))
 
 	if err != nil {
 		switch err {
 		case db.ErrNotFound:
-			return ErrProjectNotFound{err}
+			return newProject, ErrProjectNotFound{err.Error()}
 		case db.ErrInvalidData:
-			return ErrInvalidData{err}
+			return newProject, ErrInvalidData{err.Error()}
 		default:
-			return ErrUnknown{err}
+			return newProject, ErrUnknown{err}
 		}
 	}
-	return nil
+	return newProject, nil
 }
 
 func (store *Store) Get(ctx context.Context, projectId string) (*Project, error) {
@@ -88,9 +90,9 @@ func (store *Store) Get(ctx context.Context, projectId string) (*Project, error)
 	if err != nil {
 		switch err {
 		case db.ErrNotFound:
-			return p, ErrProjectNotFound{err}
+			return p, ErrProjectNotFound{err.Error()}
 		case db.ErrInvalidData:
-			return p, ErrInvalidData{err}
+			return p, ErrInvalidData{err.Error()}
 		default:
 			return p, ErrUnknown{err}
 		}
@@ -102,15 +104,15 @@ func (store *Store) Delete(ctx context.Context, projectId string) error {
 	res, err := store.db.Exec(ctx, `DELETE FROM project WHERE id = $1;`, projectId)
 	err = db.PgError(err)
 	if res.RowsAffected() == 0 && err == nil {
-		return ErrProjectNotFound{db.ErrNotFound}
+		return ErrProjectNotFound{db.ErrNotFound.Error()}
 	}
 
 	if err != nil {
 		switch err {
 		case db.ErrNotFound:
-			return ErrProjectNotFound{err}
+			return ErrProjectNotFound{err.Error()}
 		case db.ErrInvalidData:
-			return ErrInvalidData{err}
+			return ErrInvalidData{err.Error()}
 		default:
 			return ErrUnknown{err}
 		}
