@@ -1,11 +1,11 @@
 package api
 
 import (
+	"net/http"
+
 	"github.com/broswen/vex/internal/stats"
 	"github.com/broswen/vex/internal/token"
-	"github.com/go-chi/chi/v5"
 	"github.com/rs/zerolog/log"
-	"net/http"
 )
 
 func (api *API) ListTokens() http.HandlerFunc {
@@ -58,8 +58,11 @@ func (api *API) GenerateToken() http.HandlerFunc {
 
 func (api *API) RerollToken() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		//accountId := chi.URLParam(r, "accountId")
-		tokenId := chi.URLParam(r, "tokenId")
+		tokenId, err := tokenId(r)
+		if err != nil {
+			writeErr(w, nil, err)
+			return
+		}
 		t, err := api.Token.Get(r.Context(), tokenId)
 		if err != nil {
 			writeErr(w, nil, err)
@@ -95,7 +98,11 @@ func (api *API) RerollToken() http.HandlerFunc {
 
 func (api *API) DeleteToken() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		tokenId := chi.URLParam(r, "tokenId")
+		tokenId, err := tokenId(r)
+		if err != nil {
+			writeErr(w, nil, err)
+			return
+		}
 		t, err := api.Token.Get(r.Context(), tokenId)
 		if err != nil {
 			writeErr(w, nil, err)

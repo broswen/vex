@@ -1,22 +1,30 @@
 package api
 
 import (
+	"net/http"
+
 	"github.com/broswen/vex/internal/flag"
 	"github.com/broswen/vex/internal/stats"
-	"github.com/go-chi/chi/v5"
 	"github.com/rs/zerolog/log"
-	"net/http"
 )
 
 func (api *API) CreateFlag() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		projectId := chi.URLParam(r, "projectId")
+		projectId, err := projectId(r)
+		if err != nil {
+			writeErr(w, nil, err)
+			return
+		}
 		p, err := api.Project.Get(r.Context(), projectId)
 		if err != nil {
 			writeErr(w, nil, err)
 			return
 		}
-		accountId := chi.URLParam(r, "accountId")
+		accountId, err := accountId(r)
+		if err != nil {
+			writeErr(w, nil, err)
+			return
+		}
 		f := &flag.Flag{}
 		err = readJSON(w, r, f)
 		if err != nil {
@@ -61,13 +69,21 @@ func (api *API) UpdateFlag() http.HandlerFunc {
 			writeErr(w, nil, err)
 			return
 		}
-		projectId := chi.URLParam(r, "projectId")
+		projectId, err := projectId(r)
+		if err != nil {
+			writeErr(w, nil, err)
+			return
+		}
 		p, err := api.Project.Get(r.Context(), projectId)
 		if err != nil {
 			writeErr(w, nil, err)
 			return
 		}
-		accountId := chi.URLParam(r, "accountId")
+		accountId, err := accountId(r)
+		if err != nil {
+			writeErr(w, nil, err)
+			return
+		}
 		f := &flag.Flag{}
 		err = readJSON(w, r, f)
 		if err != nil {
@@ -107,7 +123,11 @@ func (api *API) UpdateFlag() http.HandlerFunc {
 
 func (api *API) ListFlags() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		projectId := chi.URLParam(r, "projectId")
+		projectId, err := projectId(r)
+		if err != nil {
+			writeErr(w, nil, err)
+			return
+		}
 		project, err := api.Project.Get(r.Context(), projectId)
 		if err != nil {
 			writeErr(w, nil, err)
@@ -129,7 +149,6 @@ func (api *API) ListFlags() http.HandlerFunc {
 
 func (api *API) GetFlag() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		//projectId := chi.URLParam(r, "projectId")
 		flagId, err := flagId(r)
 		if err != nil {
 			writeErr(w, nil, err)
@@ -150,7 +169,11 @@ func (api *API) GetFlag() http.HandlerFunc {
 
 func (api *API) DeleteFlag() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		projectId := chi.URLParam(r, "projectId")
+		projectId, err := projectId(r)
+		if err != nil {
+			writeErr(w, nil, err)
+			return
+		}
 		p, err := api.Project.Get(r.Context(), projectId)
 		if err != nil {
 			writeErr(w, nil, err)

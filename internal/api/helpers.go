@@ -4,10 +4,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/go-chi/chi/v5"
 	"io"
 	"net/http"
 	"strconv"
+
+	"github.com/go-chi/chi/v5"
 )
 
 type V1Response struct {
@@ -74,6 +75,14 @@ func flagId(r *http.Request) (string, error) {
 		return flagId, ErrBadRequest.WithError(errors.New("invalid flag id"))
 	}
 	return flagId, nil
+}
+
+func tokenId(r *http.Request) (string, error) {
+	tokenId := chi.URLParam(r, "tokenId")
+	if len(tokenId) != 36 {
+		return tokenId, ErrBadRequest.WithError(errors.New("invalid token id"))
+	}
+	return tokenId, nil
 }
 
 func readJSON(w http.ResponseWriter, r *http.Request, dst any) error {
