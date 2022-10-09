@@ -17,5 +17,5 @@ helm-template:
 	helm template provisioner k8s/provisioner > k8s/provisioner.yaml
 
 test: helm-template
-	go test ./...
+	go test -v ./...
 	kubeconform -summary -strict ./k8s/*.yaml
