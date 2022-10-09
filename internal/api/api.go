@@ -1,6 +1,8 @@
 package api
 
 import (
+	"net/http"
+
 	"github.com/broswen/vex/internal/account"
 	"github.com/broswen/vex/internal/flag"
 	"github.com/broswen/vex/internal/project"
@@ -8,7 +10,6 @@ import (
 	"github.com/broswen/vex/internal/token"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"net/http"
 )
 
 type API struct {
@@ -74,6 +75,7 @@ func (api *API) Router() http.Handler {
 		r.Delete("/projects/{projectId}", api.DeleteProject())
 
 		r.Post("/projects/{projectId}/flags", api.CreateFlag())
+		r.Put("/projects/{projectId}/flags", api.ReplaceFlags())
 		r.Get("/projects/{projectId}/flags", api.ListFlags())
 		r.Put("/projects/{projectId}/flags/{flagId}", api.UpdateFlag())
 		r.Get("/projects/{projectId}/flags/{flagId}", api.GetFlag())

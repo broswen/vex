@@ -37,3 +37,8 @@ func (m *MockStore) Delete(ctx context.Context, id string) error {
 	args := m.Called(ctx, id)
 	return args.Error(0)
 }
+
+func (m *MockStore) ReplaceFlags(ctx context.Context, projectId string, flags []*Flag) ([]*Flag, error) {
+	args := m.Called(ctx, projectId, flags)
+	return args.Get(0).([]*Flag), args.Error(1)
+}

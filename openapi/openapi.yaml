@@ -261,6 +261,37 @@ paths:
                     properties:
                       data:
                         $ref: "#/components/schemas/flag"
+    put:
+      security:
+        - bearerAuth: [ ]
+      tags:
+        - Flag
+      summary: Replaces all flags
+      description: Replaces all flags for a project.
+      parameters:
+        - $ref: "#/components/parameters/accountId"
+        - $ref: "#/components/parameters/projectId"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "#/components/schemas/flag"
+      responses:
+        "200":
+          description: "OK"
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/response"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/flag"
   /accounts/{accountId}/projects/{projectId}/flags/{flagId}:
     get:
       security:

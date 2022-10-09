@@ -3,6 +3,7 @@ package flag
 import (
 	"context"
 	"github.com/broswen/vex/internal/db"
+	"github.com/rs/zerolog/log"
 )
 
 type Store interface {
@@ -11,6 +12,7 @@ type Store interface {
 	Update(ctx context.Context, f *Flag) (*Flag, error)
 	Get(ctx context.Context, id string) (*Flag, error)
 	Delete(ctx context.Context, id string) error
+	ReplaceFlags(ctx context.Context, projectId string, flags []*Flag) ([]*Flag, error)
 }
 
 type PostgresStore struct {
@@ -125,4 +127,48 @@ func (store *PostgresStore) Delete(ctx context.Context, id string) error {
 		}
 	}
 	return nil
+}
+
+func (store *PostgresStore) ReplaceFlags(ctx context.Context, projectId string, flags []*Flag) ([]*Flag, error) {
+	tx, err := store.db.Begin(ctx)
+	err = db.PgError(err)
+	if err != nil {
+		return nil, ErrUnknown{err}
+	}
+	defer func() {
+		if err != nil {
+			log.Err(err).Str("project_id", projectId).Msg("rolling back replace flags transaction")
+			tx.Rollback(ctx)
+		}
+	}()
+	_, err = tx.Exec(ctx, `DELETE FROM flag WHERE project_id = $1;`, projectId)
+	err = db.PgError(err)
+	if err != nil {
+		log.Err(err).Msg("")
+		return nil, ErrUnknown{err}
+	}
+
+	newFlags := make([]*Flag, 0)
+	for _, f := range flags {
+		newFlag := &Flag{}
+		err := db.PgError(tx.QueryRow(ctx, `INSERT INTO flag (flag_key, flag_type, flag_value, project_id, account_id) VALUES ($1, $2, $3, $4, $5) RETURNING id, flag_key, flag_type, flag_value, project_id, account_id, created_on, modified_on;`,
+			f.Key, f.Type, f.Value, f.ProjectID, f.AccountID).Scan(&newFlag.ID, &newFlag.Key, &newFlag.Type, &newFlag.Value, &newFlag.ProjectID, &newFlag.AccountID, &newFlag.CreatedOn, &newFlag.ModifiedOn))
+		if err != nil {
+			log.Err(err).Msg("")
+			switch err {
+			case db.ErrNotFound:
+				return newFlags, ErrFlagNotFound{err.Error()}
+			case db.ErrKeyNotUnique:
+				return newFlags, ErrKeyNotUnique{err.Error()}
+			case db.ErrInvalidData:
+				return newFlags, ErrInvalidData{err.Error()}
+			default:
+				return newFlags, ErrUnknown{err}
+			}
+		}
+		newFlags = append(newFlags, newFlag)
+	}
+
+	tx.Commit(ctx)
+	return newFlags, nil
 }
