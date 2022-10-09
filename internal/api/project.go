@@ -1,18 +1,22 @@
 package api
 
 import (
+	"net/http"
+
 	"github.com/broswen/vex/internal/project"
 	"github.com/broswen/vex/internal/stats"
-	"github.com/go-chi/chi/v5"
 	"github.com/rs/zerolog/log"
-	"net/http"
 )
 
 func (api *API) CreateProject() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		accountId := chi.URLParam(r, "accountId")
+		accountId, err := accountId(r)
+		if err != nil {
+			writeErr(w, nil, err)
+			return
+		}
 		p := &project.Project{}
-		err := readJSON(w, r, p)
+		err = readJSON(w, r, p)
 		if err != nil {
 			writeErr(w, nil, ErrBadRequest.WithError(err))
 			return
@@ -36,7 +40,11 @@ func (api *API) CreateProject() http.HandlerFunc {
 
 func (api *API) UpdateProject() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		accountId := chi.URLParam(r, "accountId")
+		accountId, err := accountId(r)
+		if err != nil {
+			writeErr(w, nil, err)
+			return
+		}
 		projectId, err := projectId(r)
 		if err != nil {
 			writeErr(w, nil, err)
@@ -69,7 +77,11 @@ func (api *API) UpdateProject() http.HandlerFunc {
 
 func (api *API) ListProjects() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		accountId := chi.URLParam(r, "accountId")
+		accountId, err := accountId(r)
+		if err != nil {
+			writeErr(w, nil, err)
+			return
+		}
 		p := pagination(r)
 		projects, err := api.Project.List(r.Context(), accountId, p.Limit, p.Offset)
 		if err != nil {
@@ -86,7 +98,6 @@ func (api *API) ListProjects() http.HandlerFunc {
 
 func (api *API) GetProject() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		//accountId := chi.URLParam(r, "accountId")
 		projectId, err := projectId(r)
 		if err != nil {
 			writeErr(w, nil, err)
@@ -112,7 +123,6 @@ func (api *API) DeleteProject() http.HandlerFunc {
 			writeErr(w, nil, err)
 			return
 		}
-		//accountId := chi.URLParam(r, "accountId")
 		err = api.Project.Delete(r.Context(), projectId)
 		if err != nil {
 			writeErr(w, nil, err)
