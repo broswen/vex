@@ -15,7 +15,6 @@ func (api *API) ListTokens() http.HandlerFunc {
 			writeErr(w, nil, err)
 			return
 		}
-		defer r.Body.Close()
 		p := pagination(r)
 		tokens, err := api.Token.List(r.Context(), accountId, p.Limit, p.Offset)
 		if err != nil {
@@ -38,7 +37,6 @@ func (api *API) GenerateToken() http.HandlerFunc {
 			return
 		}
 		readOnly := r.URL.Query().Get("readOnly")
-		defer r.Body.Close()
 		t, err := api.Token.Generate(r.Context(), accountId, readOnly == "true")
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -62,7 +60,6 @@ func (api *API) RerollToken() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		//accountId := chi.URLParam(r, "accountId")
 		tokenId := chi.URLParam(r, "tokenId")
-		defer r.Body.Close()
 		t, err := api.Token.Get(r.Context(), tokenId)
 		if err != nil {
 			writeErr(w, nil, err)
@@ -112,7 +109,7 @@ func (api *API) DeleteToken() http.HandlerFunc {
 		}
 		stats.TokenDeleted.Inc()
 
-		err = api.Provisioner.DeprovisionToken(r.Context(), &token.Token{Token: t.Token})
+		err = api.Provisioner.DeprovisionToken(r.Context(), &token.Token{TokenHash: t.TokenHash})
 		if err != nil {
 			log.Warn().Str("id", t.ID).Err(err).Msg("could not deprovision token")
 		}

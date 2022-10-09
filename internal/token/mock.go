@@ -13,8 +13,8 @@ func NewMockStore() *MockStore {
 	return &MockStore{}
 }
 
-func (m *MockStore) Generate(ctx context.Context, readOnly bool) (*Token, error) {
-	args := m.Called(ctx, readOnly)
+func (m *MockStore) Generate(ctx context.Context, accountId string, readOnly bool) (*Token, error) {
+	args := m.Called(ctx, accountId, readOnly)
 	return args.Get(0).(*Token), args.Error(1)
 }
 
