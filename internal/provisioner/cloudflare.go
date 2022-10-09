@@ -14,12 +14,12 @@ type CloudflareProvisioner struct {
 	api                  *cloudflare.API
 	projectKVNamespaceID string
 	tokenKVNamespaceID   string
-	projectStore         project.ProjectStore
-	flagStore            flag.FlagStore
-	tokenStore           token.TokenStore
+	projectStore         project.Store
+	flagStore            flag.Store
+	tokenStore           token.Store
 }
 
-func NewCloudflareProvisioner(apiToken, accountID, projectVNamespaceID, tokenKVNamespaceID string, projectStore project.ProjectStore, flagStore flag.FlagStore, tokenStore token.TokenStore) (*CloudflareProvisioner, error) {
+func NewCloudflareProvisioner(apiToken, accountID, projectVNamespaceID, tokenKVNamespaceID string, projectStore project.Store, flagStore flag.Store, tokenStore token.Store) (*CloudflareProvisioner, error) {
 	api, err := cloudflare.NewWithAPIToken(apiToken)
 	api.AccountID = accountID
 	if err != nil {

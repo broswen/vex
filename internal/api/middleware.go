@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-func AccountAuthorizer(tokenStore token.TokenStore) func(next http.Handler) http.Handler {
+func AccountAuthorizer(tokenStore token.Store) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, r *http.Request) {
 			authHeader := r.Header.Get("Authorization")

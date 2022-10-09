@@ -5,7 +5,7 @@ import (
 	"github.com/broswen/vex/internal/db"
 )
 
-type FlagStore interface {
+type Store interface {
 	List(ctx context.Context, projectId string, limit, offset int64) ([]*Flag, error)
 	Insert(ctx context.Context, f *Flag) (*Flag, error)
 	Update(ctx context.Context, f *Flag) (*Flag, error)
@@ -13,15 +13,15 @@ type FlagStore interface {
 	Delete(ctx context.Context, id string) error
 }
 
-type Store struct {
+type PostgresStore struct {
 	db *db.Database
 }
 
-func NewPostgresStore(database *db.Database) (*Store, error) {
-	return &Store{db: database}, nil
+func NewPostgresStore(database *db.Database) (*PostgresStore, error) {
+	return &PostgresStore{db: database}, nil
 }
 
-func (store *Store) List(ctx context.Context, projectId string, limit, offset int64) ([]*Flag, error) {
+func (store *PostgresStore) List(ctx context.Context, projectId string, limit, offset int64) ([]*Flag, error) {
 	rows, err := store.db.Query(ctx, `SELECT id, flag_key, flag_type, flag_value, project_id, account_id, created_on, modified_on FROM flag WHERE project_id = $1 OFFSET $2 LIMIT $3;`, projectId, offset, limit)
 	err = db.PgError(err)
 	if err != nil {
@@ -47,7 +47,7 @@ func (store *Store) List(ctx context.Context, projectId string, limit, offset in
 	return fs, nil
 }
 
-func (store *Store) Insert(ctx context.Context, f *Flag) (*Flag, error) {
+func (store *PostgresStore) Insert(ctx context.Context, f *Flag) (*Flag, error) {
 	newFlag := &Flag{}
 	err := db.PgError(store.db.QueryRow(ctx, `INSERT INTO flag (flag_key, flag_type, flag_value, project_id, account_id) VALUES ($1, $2, $3, $4, $5) RETURNING id, flag_key, flag_type, flag_value, project_id, account_id, created_on, modified_on;`,
 		f.Key, f.Type, f.Value, f.ProjectID, f.AccountID).Scan(&newFlag.ID, &newFlag.Key, &newFlag.Type, &newFlag.Value, &newFlag.ProjectID, &newFlag.AccountID, &newFlag.CreatedOn, &newFlag.ModifiedOn))
@@ -66,7 +66,7 @@ func (store *Store) Insert(ctx context.Context, f *Flag) (*Flag, error) {
 	return newFlag, nil
 }
 
-func (store *Store) Update(ctx context.Context, f *Flag) (*Flag, error) {
+func (store *PostgresStore) Update(ctx context.Context, f *Flag) (*Flag, error) {
 	updatedFlag := &Flag{}
 	err := db.PgError(store.db.QueryRow(ctx, `UPDATE flag SET flag_key = $2, flag_type = $3, flag_value = $4, project_id = $5, account_id = $6 WHERE id = $1 RETURNING id, flag_key, flag_type, flag_value, project_id, account_id, created_on, modified_on;`,
 		f.ID, f.Key, f.Type, f.Value, f.ProjectID, f.AccountID).Scan(&updatedFlag.ID, &updatedFlag.Key, &updatedFlag.Type, &updatedFlag.Value, &updatedFlag.ProjectID, &updatedFlag.AccountID, &updatedFlag.CreatedOn, &updatedFlag.ModifiedOn))
@@ -85,7 +85,7 @@ func (store *Store) Update(ctx context.Context, f *Flag) (*Flag, error) {
 	return updatedFlag, nil
 }
 
-func (store *Store) Get(ctx context.Context, id string) (*Flag, error) {
+func (store *PostgresStore) Get(ctx context.Context, id string) (*Flag, error) {
 	f := &Flag{}
 	err := db.PgError(store.db.QueryRow(ctx, `SELECT id, flag_key, flag_type, flag_value, project_id, account_id, created_on, modified_on FROM flag WHERE id = $1;`,
 		id).Scan(&f.ID, &f.Key, &f.Type, &f.Value, &f.ProjectID, &f.AccountID, &f.CreatedOn, &f.ModifiedOn))
@@ -105,7 +105,7 @@ func (store *Store) Get(ctx context.Context, id string) (*Flag, error) {
 	return f, nil
 }
 
-func (store *Store) Delete(ctx context.Context, id string) error {
+func (store *PostgresStore) Delete(ctx context.Context, id string) error {
 	res, err := store.db.Exec(ctx, `DELETE FROM flag WHERE id = $1;`, id)
 	err = db.PgError(err)
 	if res.RowsAffected() == 0 && err == nil {

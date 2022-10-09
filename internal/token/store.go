@@ -8,7 +8,7 @@ import (
 	"github.com/broswen/vex/internal/db"
 )
 
-type TokenStore interface {
+type Store interface {
 	List(ctx context.Context, accountId string, limit, offset int64) ([]*Token, error)
 	Generate(ctx context.Context, accountId string, readOnly bool) (*Token, error)
 	Reroll(ctx context.Context, tokenId string) (*Token, error)
@@ -17,12 +17,12 @@ type TokenStore interface {
 	Delete(ctx context.Context, id string) error
 }
 
-type Store struct {
+type PostgresStore struct {
 	db *db.Database
 }
 
-func NewPostgresStore(database *db.Database) (*Store, error) {
-	return &Store{db: database}, nil
+func NewPostgresStore(database *db.Database) (*PostgresStore, error) {
+	return &PostgresStore{db: database}, nil
 }
 
 func GenerateTokenAndHash(length int) (string, []byte, error) {
@@ -37,7 +37,7 @@ func GenerateTokenAndHash(length int) (string, []byte, error) {
 	return token, hash, nil
 }
 
-func (store *Store) Generate(ctx context.Context, accountId string, readOnly bool) (*Token, error) {
+func (store *PostgresStore) Generate(ctx context.Context, accountId string, readOnly bool) (*Token, error) {
 	t := &Token{}
 	generatedToken, tokenHash, err := GenerateTokenAndHash(16)
 	if err != nil {
@@ -49,7 +49,7 @@ func (store *Store) Generate(ctx context.Context, accountId string, readOnly boo
 	return t, err
 }
 
-func (store *Store) Reroll(ctx context.Context, tokenId string) (*Token, error) {
+func (store *PostgresStore) Reroll(ctx context.Context, tokenId string) (*Token, error) {
 	generatedToken, tokenHash, err := GenerateTokenAndHash(16)
 	if err != nil {
 		return nil, err
@@ -61,14 +61,14 @@ func (store *Store) Reroll(ctx context.Context, tokenId string) (*Token, error) 
 	return updatedToken, err
 }
 
-func (store *Store) Get(ctx context.Context, id string) (*Token, error) {
+func (store *PostgresStore) Get(ctx context.Context, id string) (*Token, error) {
 	t := &Token{}
 	err := db.PgError(store.db.QueryRow(ctx, `SELECT id, account_id, token_hash, read_only, created_on, modified_on FROM token WHERE id = $1;`,
 		id).Scan(&t.ID, &t.AccountID, &t.TokenHash, &t.ReadOnly, &t.CreatedOn, &t.ModifiedOn))
 	return t, err
 }
 
-func (store *Store) GetByToken(ctx context.Context, token string) (*Token, error) {
+func (store *PostgresStore) GetByToken(ctx context.Context, token string) (*Token, error) {
 	t := &Token{}
 	hasher := sha256.New()
 	hasher.Write([]byte(token))
@@ -78,7 +78,7 @@ func (store *Store) GetByToken(ctx context.Context, token string) (*Token, error
 	return t, err
 }
 
-func (store *Store) List(ctx context.Context, accountId string, limit, offset int64) ([]*Token, error) {
+func (store *PostgresStore) List(ctx context.Context, accountId string, limit, offset int64) ([]*Token, error) {
 	rows, err := store.db.Query(ctx, `SELECT id, account_id, read_only, created_on, modified_on FROM token WHERE account_id = $1 OFFSET $2 LIMIT $3;`, accountId, offset, limit)
 	err = db.PgError(err)
 	if err != nil {
@@ -97,7 +97,7 @@ func (store *Store) List(ctx context.Context, accountId string, limit, offset in
 	return fs, nil
 }
 
-func (store *Store) Delete(ctx context.Context, id string) error {
+func (store *PostgresStore) Delete(ctx context.Context, id string) error {
 	_, err := store.db.Exec(ctx, `DELETE FROM token WHERE id = $1;`, id)
 	err = db.PgError(err)
 	return err

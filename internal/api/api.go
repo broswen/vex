@@ -12,10 +12,10 @@ import (
 )
 
 type API struct {
-	Account     account.AccountStore
-	Project     project.ProjectStore
-	Flag        flag.FlagStore
-	Token       token.TokenStore
+	Account     account.Store
+	Project     project.Store
+	Flag        flag.Store
+	Token       token.Store
 	Provisioner provisioner.Provisioner
 }
 
