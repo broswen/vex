@@ -62,6 +62,68 @@ func (api *API) CreateFlag() http.HandlerFunc {
 	}
 }
 
+func (api *API) ReplaceFlags() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		projectId, err := projectId(r)
+		if err != nil {
+			writeErr(w, nil, err)
+			return
+		}
+		//TODO SELECT FOR UPDATE
+		p, err := api.Project.Get(r.Context(), projectId)
+		if err != nil {
+			writeErr(w, nil, err)
+			return
+		}
+		accountId, err := accountId(r)
+		if err != nil {
+			writeErr(w, nil, err)
+			return
+		}
+		var flags []*flag.Flag
+		err = readJSON(w, r, &flags)
+		if err != nil {
+			writeErr(w, nil, ErrBadRequest.WithError(err))
+			return
+		}
+		defer r.Body.Close()
+		newFlags := make([]*flag.Flag, 0)
+		for _, f := range flags {
+			newFlag := &flag.Flag{}
+			newFlag.ProjectID = p.ID
+			newFlag.AccountID = accountId
+			newFlag.Key = f.Key
+			newFlag.Type = f.Type
+			newFlag.Value = f.Value
+
+			if err = flag.Validate(*newFlag); err != nil {
+				writeErr(w, nil, ErrBadRequest.WithError(err))
+				return
+			}
+			newFlags = append(newFlags, newFlag)
+		}
+
+		insertedFlags, err := api.Flag.ReplaceFlags(r.Context(), projectId, newFlags)
+		if err != nil {
+			writeErr(w, nil, err)
+			return
+		}
+
+		err = api.Provisioner.ProvisionProject(r.Context(), p)
+		if err != nil {
+			log.Warn().Str("id", projectId).Err(err).Msg("could not provision project")
+		}
+
+		stats.FlagCreated.Inc()
+
+		err = writeOK(w, http.StatusOK, insertedFlags)
+		if err != nil {
+			writeErr(w, nil, err)
+			return
+		}
+	}
+}
+
 func (api *API) UpdateFlag() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		flagId, err := flagId(r)

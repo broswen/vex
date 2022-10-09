@@ -72,6 +72,144 @@ func TestCreateFlagHandler(t *testing.T) {
 	store.AssertExpectations(t)
 }
 
+func TestCreateFlagHandler_InvalidType(t *testing.T) {
+	f1 := &flag.Flag{
+		Key:   "flag1",
+		Type:  "WRONG",
+		Value: "test",
+	}
+	reqBody, err := json.Marshal(f1)
+	assert.Nil(t, err)
+	req, err := http.NewRequest(http.MethodPost, "/accounts/"+accountID+"/projects/"+projectID+"/flags", bytes.NewReader(reqBody))
+	assert.Nil(t, err)
+	req.WithContext(context.Background())
+	rr := httptest.NewRecorder()
+	p1 := &project.Project{
+		ID:          projectID,
+		AccountID:   accountID,
+		Name:        "test",
+		Description: "test",
+		CreatedOn:   time.Time{},
+		ModifiedOn:  time.Time{},
+	}
+	projectStore := project.NewMockStore()
+	projectStore.On("Get", mock.Anything, projectID).Return(p1, nil)
+	store := flag.NewMockStore()
+	provisioner := provisioner2.NewMockProvisioner()
+	app := &API{
+		Flag:        store,
+		Project:     projectStore,
+		Provisioner: provisioner,
+	}
+	r := chi.NewRouter()
+	r.Post("/accounts/{accountId}/projects/{projectId}/flags", app.CreateFlag())
+	r.ServeHTTP(rr, req)
+	assert.Equalf(t, http.StatusBadRequest, rr.Code, "should return bad request")
+	store.AssertExpectations(t)
+}
+
+func TestCreateFlagHandler_InvalidValue(t *testing.T) {
+	f1 := &flag.Flag{
+		Key:   "flag1",
+		Type:  "NUMBER",
+		Value: "abc",
+	}
+	reqBody, err := json.Marshal(f1)
+	assert.Nil(t, err)
+	req, err := http.NewRequest(http.MethodPost, "/accounts/"+accountID+"/projects/"+projectID+"/flags", bytes.NewReader(reqBody))
+	assert.Nil(t, err)
+	req.WithContext(context.Background())
+	rr := httptest.NewRecorder()
+	p1 := &project.Project{
+		ID:          projectID,
+		AccountID:   accountID,
+		Name:        "test",
+		Description: "test",
+		CreatedOn:   time.Time{},
+		ModifiedOn:  time.Time{},
+	}
+	projectStore := project.NewMockStore()
+	projectStore.On("Get", mock.Anything, projectID).Return(p1, nil)
+	store := flag.NewMockStore()
+	provisioner := provisioner2.NewMockProvisioner()
+	app := &API{
+		Flag:        store,
+		Project:     projectStore,
+		Provisioner: provisioner,
+	}
+	r := chi.NewRouter()
+	r.Post("/accounts/{accountId}/projects/{projectId}/flags", app.CreateFlag())
+	r.ServeHTTP(rr, req)
+	assert.Equalf(t, http.StatusBadRequest, rr.Code, "should return bad request")
+	store.AssertExpectations(t)
+}
+
+func TestReplaceFlagsHandler(t *testing.T) {
+	flags := []*flag.Flag{
+		{
+			Key:   "flag1",
+			Type:  "STRING",
+			Value: "test",
+		},
+		{
+			Key:   "flag2",
+			Type:  "STRING",
+			Value: "test",
+		},
+	}
+	reqBody, err := json.Marshal(flags)
+	assert.Nil(t, err)
+	req, err := http.NewRequest(http.MethodPut, "/accounts/"+accountID+"/projects/"+projectID+"/flags", bytes.NewReader(reqBody))
+	assert.Nil(t, err)
+	req.WithContext(context.Background())
+	rr := httptest.NewRecorder()
+	p1 := &project.Project{
+		ID:          projectID,
+		AccountID:   accountID,
+		Name:        "test",
+		Description: "test",
+		CreatedOn:   time.Time{},
+		ModifiedOn:  time.Time{},
+	}
+	projectStore := project.NewMockStore()
+	projectStore.On("Get", mock.Anything, projectID).Return(p1, nil)
+	store := flag.NewMockStore()
+	store.On("ReplaceFlags", mock.Anything, projectID, mock.Anything).Return([]*flag.Flag{
+		{
+			ID:         flagID,
+			ProjectID:  projectID,
+			AccountID:  accountID,
+			CreatedOn:  now,
+			ModifiedOn: now,
+			Key:        "flag1",
+			Type:       "STRING",
+			Value:      "test",
+		},
+		{
+			ID:         flagID,
+			ProjectID:  projectID,
+			AccountID:  accountID,
+			CreatedOn:  now,
+			ModifiedOn: now,
+			Key:        "flag2",
+			Type:       "STRING",
+			Value:      "test",
+		},
+	}, nil)
+	provisioner := provisioner2.NewMockProvisioner()
+	provisioner.On("ProvisionProject", mock.Anything, p1).Return(nil)
+	app := &API{
+		Flag:        store,
+		Project:     projectStore,
+		Provisioner: provisioner,
+	}
+	r := chi.NewRouter()
+	r.Put("/accounts/{accountId}/projects/{projectId}/flags", app.ReplaceFlags())
+	r.ServeHTTP(rr, req)
+	assert.Equalf(t, http.StatusOK, rr.Code, "should return ok")
+	store.AssertExpectations(t)
+}
+
 func TestGetFlagHandler(t *testing.T) {
 	req, err := http.NewRequest(http.MethodGet, "/accounts/"+accountID+"/projects/"+projectID+"/flags/"+flagID, nil)
 	assert.Nil(t, err)

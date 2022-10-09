@@ -200,4 +200,5 @@ terraform-provider-vex - https://github.com/broswen/terraform-provider-vex
 - [x] add created_on and modified_on fields to all resources
 - [ ] incremental config builds
   - store prerendered config in postgres, parse and insert/update flags as needed
-- [ ] add `PUT /accounts/{id}/projects/{id}/flags` endpoint to replace all flags in a single request (using project level transaction lock)
+- [x] add `PUT /accounts/{id}/projects/{id}/flags` endpoint to replace all flags in a single request (using project level transaction lock)
+  - [ ] lock project with FOR UPDATE clause before replacing all flags
