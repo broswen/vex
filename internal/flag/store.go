@@ -141,6 +141,14 @@ func (store *PostgresStore) ReplaceFlags(ctx context.Context, projectId string, 
 			tx.Rollback(ctx)
 		}
 	}()
+
+	_, err = tx.Exec(ctx, `SELECT * FROM project WHERE id = $1 FOR UPDATE;`, projectId)
+	err = db.PgError(err)
+	if err != nil {
+		log.Err(err).Msg("")
+		return nil, ErrUnknown{err}
+	}
+
 	_, err = tx.Exec(ctx, `DELETE FROM flag WHERE project_id = $1;`, projectId)
 	err = db.PgError(err)
 	if err != nil {
