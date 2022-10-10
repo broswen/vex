@@ -69,7 +69,6 @@ func (api *API) ReplaceFlags() http.HandlerFunc {
 			writeErr(w, nil, err)
 			return
 		}
-		//TODO SELECT FOR UPDATE
 		p, err := api.Project.Get(r.Context(), projectId)
 		if err != nil {
 			writeErr(w, nil, err)
