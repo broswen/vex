@@ -19,6 +19,8 @@ create table token (
     modified_on timestamptz not null default now()
 );
 
+create index if not exists token_token_hash on token(token_hash);
+
 create table project (
     id uuid default uuid_generate_v4() primary key,
     account_id uuid references account(id) on delete cascade,
@@ -27,6 +29,8 @@ create table project (
     created_on timestamptz not null default now(),
     modified_on timestamptz not null default now()
 );
+
+create index if not exists project_account_id on project(account_id);
 
 create table flag (
     id uuid default uuid_generate_v4() primary key,
@@ -39,6 +43,8 @@ create table flag (
     modified_on timestamptz not null default now(),
     unique (project_id, flag_key)
 );
+
+create index if not exists flag_project_id on flag(project_id);
 
 create or replace function update_modified_on() returns trigger as $$
     begin

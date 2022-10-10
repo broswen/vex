@@ -28,7 +28,7 @@ func (m *MockStore) Get(ctx context.Context, id string) (*Token, error) {
 	return args.Get(0).(*Token), args.Error(1)
 }
 
-func (m *MockStore) GetByToken(ctx context.Context, token string) (*Token, error) {
+func (m *MockStore) GetByHash(ctx context.Context, token string) (*Token, error) {
 	args := m.Called(ctx, token)
 	return args.Get(0).(*Token), args.Error(1)
 }

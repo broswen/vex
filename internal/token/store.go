@@ -13,7 +13,7 @@ type Store interface {
 	Generate(ctx context.Context, accountId string, readOnly bool) (*Token, error)
 	Reroll(ctx context.Context, tokenId string) (*Token, error)
 	Get(ctx context.Context, id string) (*Token, error)
-	GetByToken(ctx context.Context, token string) (*Token, error)
+	GetByHash(ctx context.Context, hash string) (*Token, error)
 	Delete(ctx context.Context, id string) error
 }
 
@@ -68,7 +68,7 @@ func (store *PostgresStore) Get(ctx context.Context, id string) (*Token, error) 
 	return t, err
 }
 
-func (store *PostgresStore) GetByToken(ctx context.Context, token string) (*Token, error) {
+func (store *PostgresStore) GetByHash(ctx context.Context, token string) (*Token, error) {
 	t := &Token{}
 	hasher := sha256.New()
 	hasher.Write([]byte(token))

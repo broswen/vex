@@ -31,7 +31,7 @@ func AccountAuthorizer(tokenStore token.Store) func(next http.Handler) http.Hand
 				return
 			}
 			token := parts[1]
-			t, err := tokenStore.GetByToken(r.Context(), token)
+			t, err := tokenStore.GetByHash(r.Context(), token)
 			if err != nil {
 				log.Debug().Err(err).Msg("couldn't get by token")
 				writeErr(w, nil, ErrUnauthorized)
