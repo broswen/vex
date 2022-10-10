@@ -113,7 +113,8 @@ func (api *API) ReplaceFlags() http.HandlerFunc {
 			log.Warn().Str("id", projectId).Err(err).Msg("could not provision project")
 		}
 
-		stats.FlagCreated.Inc()
+		stats.FlagCreated.Add(float64(len(insertedFlags)))
+		stats.FlagDeleted.Add(float64(len(insertedFlags)))
 
 		err = writeOK(w, http.StatusOK, insertedFlags)
 		if err != nil {
