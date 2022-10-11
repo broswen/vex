@@ -10,6 +10,7 @@ import (
 	"github.com/broswen/vex/internal/token"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/cors"
 )
 
 type API struct {
@@ -45,6 +46,13 @@ func (api *API) Router() http.Handler {
 	r.Use(middleware.Logger)
 	r.Use(middleware.RealIP)
 	r.Use(middleware.SetHeader("Content-Type", "application/json"))
+	r.Use(cors.Handler(cors.Options{
+		AllowedOrigins:   []string{"https://vex.broswen.com", "http://localhost:3000", "http://localhost:8080"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Origin", "Accept", "Content-Type", "Authorization"},
+		AllowCredentials: true,
+		MaxAge:           300,
+	}))
 
 	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
 		writeErr(w, nil, ErrNotFound)
