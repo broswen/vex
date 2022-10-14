@@ -21,15 +21,15 @@ type API struct {
 	Provisioner provisioner.Provisioner
 }
 
-func (api *API) AdminRouter(teamDomain, policyAUD string) http.Handler {
+func (api *API) AdminRouter(accessClient AccessClient) http.Handler {
 	r := chi.NewRouter()
 	r.Use(middleware.StripSlashes)
 	r.Use(middleware.Heartbeat("/healthz"))
 	r.Use(middleware.Logger)
 	r.Use(middleware.RealIP)
 	r.Use(middleware.SetHeader("Content-Type", "application/json"))
-	r.Use(CloudflareAccessVerifier(teamDomain, policyAUD))
-	r.Use(CloudflareAccessIdentityLogger())
+	r.Use(CloudflareAccessVerifier(accessClient))
+	r.Use(CloudflareAccessIdentityLogger(accessClient))
 
 	r.Get("/admin/accounts", api.ListAccounts())
 	r.Post("/admin/accounts", api.CreateAccount())

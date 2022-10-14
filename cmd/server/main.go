@@ -120,7 +120,8 @@ func main() {
 		Provisioner: provisioner,
 	}
 
-	adminRouter := app.AdminRouter(teamDomain, policyAUD)
+	accessClient := api.NewAccessClient(teamDomain, policyAUD)
+	adminRouter := app.AdminRouter(accessClient)
 	adminServer := http.Server{
 		Addr:    fmt.Sprintf(":%s", adminPort),
 		Handler: adminRouter,
