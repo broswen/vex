@@ -2,13 +2,26 @@ package api
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/broswen/vex/internal/token"
 	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/rs/zerolog/log"
 	"net/http"
 	"strings"
+	"time"
 )
+
+var (
+	AccessCookieName   = "CF_Authorization"
+	AccessIdentityPath = "/cdn-cgi/access/get-identity"
+)
+
+type AccessIdentity struct {
+	Email     string `json:"email"`
+	UserUUID  string `json:"user_uuid"`
+	AccountID string `json:"account_id"`
+}
 
 func AccountAuthorizer(tokenStore token.Store) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
@@ -98,6 +111,50 @@ func CloudflareAccessVerifier(teamDomain, policyAUD string) func(next http.Handl
 				writeErr(w, nil, ErrUnauthorized)
 				return
 			}
+			next.ServeHTTP(w, r)
+		}
+		return http.HandlerFunc(fn)
+	}
+}
+
+func CloudflareAccessIdentityLogger() func(next http.Handler) http.Handler {
+	client := http.Client{
+		Timeout: time.Second * 3,
+	}
+	return func(next http.Handler) http.Handler {
+		fn := func(w http.ResponseWriter, r *http.Request) {
+			cfAuthorization, err := r.Cookie(AccessCookieName)
+			if err != nil {
+				log.Warn().Err(err).Msg("no CF_Authorization cookie found")
+				next.ServeHTTP(w, r)
+				return
+			}
+			req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("https://%s%s", r.Host, AccessIdentityPath), nil)
+			if err != nil {
+				log.Error().Err(err).Msg("creating access identity request")
+				next.ServeHTTP(w, r)
+				return
+			}
+			req.AddCookie(cfAuthorization)
+			res, err := client.Do(req)
+			if err != nil {
+				log.Error().Err(err).Msg("sending access identity request")
+				next.ServeHTTP(w, r)
+				return
+			}
+			if res.StatusCode >= http.StatusBadRequest {
+				log.Error().Str("status", res.Status).Int("code", res.StatusCode).Msg("received access identity request")
+				next.ServeHTTP(w, r)
+				return
+			}
+			identity := &AccessIdentity{}
+			err = json.NewDecoder(res.Body).Decode(identity)
+			if err != nil {
+				log.Error().Err(err).Msg("decoding access identity")
+				next.ServeHTTP(w, r)
+				return
+			}
+			log.Debug().Str("email", identity.Email).Str("user_uuid", identity.UserUUID).Str("account_id", identity.AccountID).Str("method", r.Method).Str("path", r.URL.Path).Msg("access identity")
 			next.ServeHTTP(w, r)
 		}
 		return http.HandlerFunc(fn)

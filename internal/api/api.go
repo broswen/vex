@@ -29,6 +29,7 @@ func (api *API) AdminRouter(teamDomain, policyAUD string) http.Handler {
 	r.Use(middleware.RealIP)
 	r.Use(middleware.SetHeader("Content-Type", "application/json"))
 	r.Use(CloudflareAccessVerifier(teamDomain, policyAUD))
+	r.Use(CloudflareAccessIdentityLogger())
 
 	r.Get("/admin/accounts", api.ListAccounts())
 	r.Post("/admin/accounts", api.CreateAccount())
