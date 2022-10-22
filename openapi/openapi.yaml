@@ -6,7 +6,7 @@ info:
   version: 1.0.0
 
 servers:
-  - url: https://vex.broswen.com
+  - url: https://vex.broswen.com/api
 
 paths:
   /accounts/{accountId}:

@@ -8,7 +8,7 @@ Accounts can contain multiple projects which consist of a set of configuration f
 ![diagram](vex.png)
 
 ## Accounts
-`curl -X GET -H 'Authorization: Bearer <token here>' /accounts/{accountId}`
+`curl -X GET -H 'Authorization: Bearer <token here>' /api/accounts/{accountId}`
 
 ```json
 {
@@ -28,7 +28,7 @@ Accounts can contain multiple projects which consist of a set of configuration f
 A token is used to manage account objects (read_only = false) or can be set to read only for just reading the project flags
 from the CDN (read_only = true).
 
-`curl -X POST -H 'Authorization Bearer <token here>` /accounts/{accountId}/tokens?readOnly=true`
+`curl -X POST -H 'Authorization Bearer <token here>' /api/accounts/{accountId}/tokens?readOnly=true`
 ```json
 {
     "data": {
@@ -43,7 +43,7 @@ from the CDN (read_only = true).
     "errors": []
 }
 ```
-`curl -X GET -H 'Authorization: Bearer <token here>` /accounts/{acountId}/tokens`
+`curl -X GET -H 'Authorization: Bearer <token here>' /api/accounts/{acountId}/tokens`
 ```json
 {
     "data": [
@@ -61,7 +61,7 @@ from the CDN (read_only = true).
 ```
 
 Reroll an existing token to get a new value without creating a new token.
-`curl -X PUT -H 'Authorization: Bearer <token here>' /accounts/{accountId/tokens/{tokenId}`
+`curl -X PUT -H 'Authorization: Bearer <token here>' /api/accounts/{accountId/tokens/{tokenId}`
 ```json
 {
     "data": {
@@ -81,7 +81,7 @@ Reroll an existing token to get a new value without creating a new token.
 
 A project is a set of configuration flags.
 
-`curl -X GET -H 'Authorization: Bearer <token here>' /accounts/{accountId}/projects/{projectId}`
+`curl -X GET -H 'Authorization: Bearer <token here>' /api/accounts/{accountId}/projects/{projectId}`
 ```json
 {
   "data": [
@@ -113,7 +113,7 @@ Flags hold the configuration values for a project. They can be of types `BOOLEAN
 Flags store their raw value as strings with an enum that specifies their type. Each SDK can decide
 how to parse the flag value in their own language.
 
-`curl -X GET -H 'Authorization: Bearer <token here>' /accounts/{accountId}/projects/{projectId}/flags/{flagId}`
+`curl -X GET -H 'Authorization: Bearer <token here>' /api/accounts/{accountId}/projects/{projectId}/flags/{flagId}`
 ```json
 {
     "data": [
@@ -200,5 +200,5 @@ terraform-provider-vex - https://github.com/broswen/terraform-provider-vex
 - [x] add created_on and modified_on fields to all resources
 - [ ] incremental config builds
   - store prerendered config in postgres, parse and insert/update flags as needed
-- [x] add `PUT /accounts/{id}/projects/{id}/flags` endpoint to replace all flags in a single request (using project level transaction lock)
+- [x] add `PUT /api/accounts/{id}/projects/{id}/flags` endpoint to replace all flags in a single request (using project level transaction lock)
   - [x] lock project with FOR UPDATE clause before replacing all flags

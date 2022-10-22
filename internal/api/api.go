@@ -43,7 +43,6 @@ func (api *API) AdminRouter(accessClient AccessClient) http.Handler {
 func (api *API) Router() http.Handler {
 	r := chi.NewRouter()
 	r.Use(middleware.StripSlashes)
-	r.Use(middleware.Heartbeat("/healthz"))
 	r.Use(middleware.Logger)
 	r.Use(middleware.RealIP)
 	r.Use(middleware.SetHeader("Content-Type", "application/json"))
@@ -66,7 +65,7 @@ func (api *API) Router() http.Handler {
 	//disable creating accounts through api for now
 	//r.Post("/accounts", CreateAccount(accountStore))
 	//r.Get("/accounts/", http.NotFound)
-	r.Route("/accounts/{accountId}", func(r chi.Router) {
+	r.Route("/api/accounts/{accountId}", func(r chi.Router) {
 		r.Use(AccountAuthorizer(api.Token))
 		r.Get("/", api.GetAccount())
 		r.Put("/", api.UpdateAccount())

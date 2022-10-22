@@ -75,7 +75,7 @@ ingress:
   hosts:
     - host: vex.broswen.com
       paths:
-        - path: /
+        - path: /api
           pathType: Prefix
           port: 8080
     - host: vex-admin.broswen.com

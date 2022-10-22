@@ -116,12 +116,16 @@ spec:
               containerPort: 8082
               protocol: TCP
           livenessProbe:
+            initialDelaySeconds: 15
+            periodSeconds: 20
             httpGet:
-              path: /healthz
+              path: /healthcheck
               port: http
           readinessProbe:
+            initialDelaySeconds: 5
+            periodSeconds: 10
             httpGet:
-              path: /healthz
+              path: /healthcheck
               port: http
           resources:
             limits:
@@ -148,7 +152,7 @@ spec:
     - host: "vex.broswen.com"
       http:
         paths:
-          - path: /
+          - path: /api
             pathType: Prefix
             backend:
               service:
