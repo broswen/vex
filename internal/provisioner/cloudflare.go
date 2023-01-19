@@ -3,6 +3,7 @@ package provisioner
 import (
 	"context"
 	"encoding/hex"
+	"fmt"
 	"github.com/broswen/vex/internal/flag"
 	"github.com/broswen/vex/internal/project"
 	"github.com/broswen/vex/internal/token"
@@ -13,13 +14,14 @@ import (
 type CloudflareProvisioner struct {
 	api                  *cloudflare.API
 	projectKVNamespaceID string
+	flagKVNamespaceID    string
 	tokenKVNamespaceID   string
 	projectStore         project.Store
 	flagStore            flag.Store
 	tokenStore           token.Store
 }
 
-func NewCloudflareProvisioner(apiToken, accountID, projectVNamespaceID, tokenKVNamespaceID string, projectStore project.Store, flagStore flag.Store, tokenStore token.Store) (*CloudflareProvisioner, error) {
+func NewCloudflareProvisioner(apiToken, accountID, projectVNamespaceID, tokenKVNamespaceID, flagKVNamespaceID string, projectStore project.Store, flagStore flag.Store, tokenStore token.Store) (*CloudflareProvisioner, error) {
 	api, err := cloudflare.NewWithAPIToken(apiToken)
 	api.AccountID = accountID
 	if err != nil {
@@ -29,10 +31,42 @@ func NewCloudflareProvisioner(apiToken, accountID, projectVNamespaceID, tokenKVN
 		api:                  api,
 		projectKVNamespaceID: projectVNamespaceID,
 		tokenKVNamespaceID:   tokenKVNamespaceID,
+		flagKVNamespaceID:    flagKVNamespaceID,
 		projectStore:         projectStore,
 		flagStore:            flagStore,
 		tokenStore:           tokenStore,
 	}, nil
+}
+
+func (p *CloudflareProvisioner) ProvisionFlag(ctx context.Context, f *flag.Flag) error {
+	b, err := f.Render()
+	if err != nil {
+		return err
+	}
+
+	resp, err := p.api.WriteWorkersKVBulk(ctx, p.projectKVNamespaceID, cloudflare.WorkersKVBulkWriteRequest{
+		{
+			Key:      fmt.Sprintf("%s/%s", f.ProjectID, f.ID),
+			Value:    string(b),
+			Metadata: f.AccountID,
+		},
+	})
+
+	if !resp.Success {
+		log.Warn().Msgf("errors: %v", resp.Errors)
+		log.Warn().Msgf("messages: %v", resp.Messages)
+	}
+	return err
+}
+
+func (p *CloudflareProvisioner) DeprovisionFlag(ctx context.Context, f *flag.Flag) error {
+	resp, err := p.api.DeleteWorkersKV(ctx, p.projectKVNamespaceID, fmt.Sprintf("%s/%s", f.ProjectID, f.ID))
+
+	if !resp.Success {
+		log.Warn().Msgf("errors: %v", resp.Errors)
+		log.Warn().Msgf("messages: %v", resp.Messages)
+	}
+	return err
 }
 
 func (p *CloudflareProvisioner) ProvisionProject(ctx context.Context, pr *project.Project) error {

@@ -2,6 +2,7 @@ package provisioner
 
 import (
 	"context"
+	"github.com/broswen/vex/internal/flag"
 	"github.com/broswen/vex/internal/project"
 	"github.com/broswen/vex/internal/token"
 	"github.com/stretchr/testify/mock"
@@ -13,6 +14,16 @@ type MockProvisioner struct {
 
 func NewMockProvisioner() *MockProvisioner {
 	return &MockProvisioner{}
+}
+
+func (m *MockProvisioner) ProvisionFlag(ctx context.Context, f *flag.Flag) error {
+	args := m.Called(ctx, f)
+	return args.Error(0)
+}
+
+func (m *MockProvisioner) DeprovisionFlag(ctx context.Context, f *flag.Flag) error {
+	args := m.Called(ctx, f)
+	return args.Error(0)
 }
 
 func (m *MockProvisioner) ProvisionProject(ctx context.Context, p *project.Project) error {

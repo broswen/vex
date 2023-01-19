@@ -47,9 +47,9 @@ func (api *API) CreateFlag() http.HandlerFunc {
 			return
 		}
 
-		err = api.Provisioner.ProvisionProject(r.Context(), p)
+		err = api.Provisioner.ProvisionFlag(r.Context(), newFlag)
 		if err != nil {
-			log.Warn().Str("id", projectId).Err(err).Msg("could not provision project")
+			log.Warn().Str("project_id", f.ProjectID).Str("flag_id", f.ID).Err(err).Msg("could not provision flag")
 		}
 
 		stats.FlagCreated.Inc()
@@ -108,9 +108,11 @@ func (api *API) ReplaceFlags() http.HandlerFunc {
 			return
 		}
 
-		err = api.Provisioner.ProvisionProject(r.Context(), p)
-		if err != nil {
-			log.Warn().Str("id", projectId).Err(err).Msg("could not provision project")
+		for _, f := range insertedFlags {
+			err = api.Provisioner.ProvisionFlag(r.Context(), f)
+			if err != nil {
+				log.Warn().Str("project_id", f.ProjectID).Str("flag_id", f.ID).Err(err).Msg("could not provision flag")
+			}
 		}
 
 		stats.FlagCreated.Add(float64(len(insertedFlags)))
@@ -168,9 +170,10 @@ func (api *API) UpdateFlag() http.HandlerFunc {
 			writeErr(w, nil, err)
 			return
 		}
-		err = api.Provisioner.ProvisionProject(r.Context(), p)
+
+		err = api.Provisioner.ProvisionFlag(r.Context(), updatedFlag)
 		if err != nil {
-			log.Warn().Str("id", projectId).Err(err).Msg("could not provision project")
+			log.Warn().Str("project_id", updatedFlag.ProjectID).Str("flag_id", updatedFlag.ID).Err(err).Msg("could not provision flag")
 		}
 
 		stats.FlagUpdated.Inc()
@@ -246,10 +249,19 @@ func (api *API) DeleteFlag() http.HandlerFunc {
 			writeErr(w, nil, err)
 			return
 		}
+		f, err := api.Flag.Get(r.Context(), flagId)
+		if err != nil {
+			writeErr(w, nil, err)
+			return
+		}
 		err = api.Flag.Delete(r.Context(), flagId)
 		if err != nil {
 			writeErr(w, nil, err)
 			return
+		}
+		err = api.Provisioner.DeprovisionFlag(r.Context(), f)
+		if err != nil {
+			log.Warn().Str("project_id", f.ProjectID).Str("flag_id", f.ID).Err(err).Msg("could not deprovision flag")
 		}
 		err = api.Provisioner.ProvisionProject(r.Context(), p)
 		if err != nil {
@@ -258,7 +270,7 @@ func (api *API) DeleteFlag() http.HandlerFunc {
 
 		stats.FlagDeleted.Inc()
 
-		err = writeOK(w, http.StatusOK, &struct{ id string }{id: flagId})
+		err = writeOK(w, http.StatusOK, f)
 		if err != nil {
 			writeErr(w, nil, err)
 			return

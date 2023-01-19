@@ -2,7 +2,9 @@ package provisioner
 
 import (
 	"context"
+	"encoding/json"
 	"github.com/Shopify/sarama"
+	"github.com/broswen/vex/internal/flag"
 	"github.com/broswen/vex/internal/project"
 	"github.com/broswen/vex/internal/stats"
 	"github.com/broswen/vex/internal/token"
@@ -13,6 +15,8 @@ import (
 type KafkaProvisioner struct {
 	provisionProjectTopic   string
 	deprovisionProjectTopic string
+	provisionFlagTopic      string
+	deprovisionFlagTopic    string
 	provisionTokenTopic     string
 	deprovisionTokenTopic   string
 	broker                  string
@@ -43,6 +47,40 @@ func NewKafkaProvisioner(provisionProjectTopic, deprovisionProjectTopic, provisi
 		broker:                  broker,
 		producer:                producer,
 	}, nil
+}
+
+func (p *KafkaProvisioner) ProvisionFlag(ctx context.Context, f *flag.Flag) error {
+	b, err := json.Marshal(f)
+	if err != nil {
+		return err
+	}
+	_, _, err = p.producer.SendMessage(&sarama.ProducerMessage{
+		Topic:     p.provisionFlagTopic,
+		Key:       sarama.StringEncoder(f.ID),
+		Value:     sarama.StringEncoder(b),
+		Timestamp: time.Now(),
+	})
+	if err != nil {
+		stats.ProvisionError.Inc()
+	}
+	return err
+}
+
+func (p *KafkaProvisioner) DeprovisionFlag(ctx context.Context, f *flag.Flag) error {
+	b, err := json.Marshal(f)
+	if err != nil {
+		return err
+	}
+	_, _, err = p.producer.SendMessage(&sarama.ProducerMessage{
+		Topic:     p.deprovisionProjectTopic,
+		Key:       sarama.StringEncoder(b),
+		Value:     sarama.StringEncoder(b),
+		Timestamp: time.Now(),
+	})
+	if err != nil {
+		stats.DeprovisionError.Inc()
+	}
+	return err
 }
 
 func (p *KafkaProvisioner) ProvisionProject(ctx context.Context, pr *project.Project) error {

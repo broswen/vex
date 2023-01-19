@@ -14,12 +14,20 @@ var (
 		Name: "project_provisioned",
 	})
 
+	FlagProvisioned = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "flag_provisioned",
+	})
+
 	DeprovisionError = promauto.NewCounter(prometheus.CounterOpts{
 		Name: "deprovision_error",
 	})
 
 	ProjectDeprovisioned = promauto.NewCounter(prometheus.CounterOpts{
 		Name: "project_deprovisioned",
+	})
+
+	FlagDeprovisioned = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "Flag_deprovisioned",
 	})
 
 	ProjectCreated = promauto.NewCounter(prometheus.CounterOpts{

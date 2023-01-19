@@ -31,6 +31,10 @@ export async function handleRequest(request: Request, env: Env) {
     return new Response('invalid project id', {status: 400})
   }
   const getWithMetadataResult = await env.FLAG.getWithMetadata(projectId)
+  // list all keys with prefix project_id/flag_id
+  // check if each key accountid matches or skip just in case
+  // combine all to single json object
+  // return
 
   //reject if bearer token account id doesn't match project account id from metadata
   if (getWithMetadataResult.metadata !== tokenAccount) {
@@ -46,7 +50,6 @@ export async function handleRequest(request: Request, env: Env) {
 
 const worker: { fetch: (request: Request, env: Env) => Promise<Response> } = { fetch: handleRequest };
 export default worker;
-
 
 export function getToken(request: Request): string | null {
   const authorization = request.headers.get('Authorization')

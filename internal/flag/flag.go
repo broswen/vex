@@ -58,15 +58,30 @@ func Validate(f Flag) error {
 	return nil
 }
 
+func (f *Flag) Render() ([]byte, error) {
+	jFlag := JsonFlag{
+		Key:   f.Key,
+		Value: f.Value,
+		Type:  f.Type,
+	}
+	b := bytes.NewBuffer([]byte{})
+	err := json.NewEncoder(b).Encode(jFlag)
+	return b.Bytes(), err
+}
+
 type JsonFlag struct {
-	Value string `json:"value"`
-	Type  Type   `json:"type"`
+	AccountId string `json:"account_id"`
+	ProjectId string `json:"project_id"`
+	Key       string `json:"key"`
+	Value     string `json:"value"`
+	Type      Type   `json:"type"`
 }
 
 func RenderConfig(flags []*Flag) ([]byte, error) {
 	config := make(map[string]JsonFlag)
 	for _, f := range flags {
 		config[f.Key] = JsonFlag{
+			Key:   f.Key,
 			Value: f.Value,
 			Type:  f.Type,
 		}

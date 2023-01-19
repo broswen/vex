@@ -202,3 +202,8 @@ terraform-provider-vex - https://github.com/broswen/terraform-provider-vex
   - store prerendered config in postgres, parse and insert/update flags as needed
 - [x] add `PUT /api/accounts/{id}/projects/{id}/flags` endpoint to replace all flags in a single request (using project level transaction lock)
   - [x] lock project with FOR UPDATE clause before replacing all flags
+
+- [ ] store project flags individually in KV under project prefix
+  - [ ] send kafka messages with project and flag details
+  - [ ] update CF Worker to list all flags in KV with project id prefix
+  - this allows updating flags individually in KV without a rerender of the entire project

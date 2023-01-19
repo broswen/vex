@@ -3,12 +3,12 @@ package main
 import (
 	"context"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
-	"flag"
 	"fmt"
 	"github.com/Shopify/sarama"
 	"github.com/broswen/vex/internal/db"
-	flag2 "github.com/broswen/vex/internal/flag"
+	"github.com/broswen/vex/internal/flag"
 	"github.com/broswen/vex/internal/project"
 	"github.com/broswen/vex/internal/provisioner"
 	"github.com/broswen/vex/internal/stats"
@@ -34,6 +34,7 @@ func main() {
 	cloudflareAccountId := os.Getenv("CLOUDFLARE_ACCOUNT_ID")
 	// KV namespace id
 	projectKVNamespaceID := os.Getenv("PROJECT_KV_NAMESPACE_ID")
+	flagKVNamespaceID := os.Getenv("FLAG_KV_NAMESPACE_ID")
 	tokenKVNamespaceID := os.Getenv("TOKEN_KV_NAMESPACE_ID")
 
 	skipProvision := os.Getenv("SKIP_PROVISION")
@@ -65,7 +66,7 @@ func main() {
 		log.Fatal().Err(err)
 	}
 
-	cloudflareProvisioner, err := provisioner.NewCloudflareProvisioner(cloudflareToken, cloudflareAccountId, projectKVNamespaceID, tokenKVNamespaceID, projectStore, flagStore, tokenStore)
+	cloudflareProvisioner, err := provisioner.NewCloudflareProvisioner(cloudflareToken, cloudflareAccountId, projectKVNamespaceID, tokenKVNamespaceID, flagKVNamespaceID, projectStore, flagStore, tokenStore)
 
 	// port for prometheus
 	metricsPort := os.Getenv("METRICS_PORT")
@@ -84,7 +85,7 @@ func main() {
 	}
 	topics := os.Getenv("TOPICS")
 	if topics == "" {
-		topics = "vex-provision,vex-deprovision,vex-provision-token,vex-deprovision-token"
+		topics = "vex-provision,vex-deprovision,vex-provision-token,vex-deprovision-token,vex-provision-flag,vex-deprovision-flag"
 	}
 	brokers := os.Getenv("BROKERS")
 	if brokers == "" {
@@ -112,6 +113,26 @@ func main() {
 		log.Debug().Str("id", string(message.Value)).Msg("deprovisioning project")
 		stats.ProjectDeprovisioned.Inc()
 		return cloudflareProvisioner.DeprovisionProject(context.Background(), &project.Project{ID: string(message.Value)})
+	})
+	consumer.HandleFunc("vex-provision-flag", func(message *sarama.ConsumerMessage) error {
+		f := &flag.Flag{}
+		err := json.Unmarshal(message.Value, f)
+		if err != nil {
+			return err
+		}
+		log.Debug().Str("flag_id", f.ID).Msg("provisioning flag")
+		stats.FlagProvisioned.Inc()
+		return cloudflareProvisioner.ProvisionFlag(context.Background(), f)
+	})
+	consumer.HandleFunc("vex-deprovision-flag", func(message *sarama.ConsumerMessage) error {
+		f := &flag.Flag{}
+		err := json.Unmarshal(message.Value, f)
+		if err != nil {
+			return err
+		}
+		log.Debug().Str("flag_id", f.ID).Msg("deprovisioning flag")
+		stats.FlagDeprovisioned.Inc()
+		return cloudflareProvisioner.DeprovisionFlag(context.Background(), f)
 	})
 
 	consumer.HandleFunc("vex-provision-token", func(message *sarama.ConsumerMessage) error {
